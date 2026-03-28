@@ -19,27 +19,67 @@ const STATUS_FILTERS = [
 export default function Games() {
   const navigate = useNavigate()
   const [statusFilter, setStatusFilter] = useState('')
+  const [showFilters, setShowFilters]   = useState(false)
+  const [hostSearch,  setHostSearch]    = useState('')
+  const [dateFrom,    setDateFrom]      = useState('')
+  const [dateTo,      setDateTo]        = useState('')
+
+  const activeFilterCount = [hostSearch, dateFrom, dateTo].filter(Boolean).length
+
+  const filters = {
+    ...(statusFilter && { status: statusFilter }),
+    ...(hostSearch   && { host: hostSearch }),
+    ...(dateFrom     && { dateFrom }),
+    ...(dateTo       && { dateTo }),
+  }
 
   const { data: games, loading, error, refetch } = useFetch(
-    () => getGames(statusFilter ? { status: statusFilter } : {}),
-    [statusFilter]
+    () => getGames(filters),
+    [statusFilter, hostSearch, dateFrom, dateTo]
   )
+
+  const clearFilters = () => {
+    setHostSearch(''); setDateFrom(''); setDateTo('')
+  }
 
   return (
     <>
-      {/* ── Header ─────────────────────────────── */}
+      {/* ── Header ───────────────────────────────── */}
       <div className="sticky top-14 z-10 bg-gray-50/95 backdrop-blur-sm border-b border-gray-100">
-        <div className="px-4 pt-4 pb-3 flex items-center gap-3">
+        <div className="px-4 pt-4 pb-3 flex items-center gap-2">
           <h1 className="text-xl font-bold text-gray-900 flex-1">Games</h1>
+
+          {/* Filter toggle */}
+          <button
+            onClick={() => setShowFilters((v) => !v)}
+            className={`relative p-2 rounded-xl border transition-colors ${
+              showFilters || activeFilterCount
+                ? 'border-green-300 bg-green-50 text-green-700'
+                : 'border-gray-200 bg-white text-gray-500'
+            }`}
+            aria-label="Filters"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2a1 1 0 01-.293.707L13 13.414V19a1 1 0 01-.553.894l-4 2A1 1 0 017 21v-7.586L3.293 6.707A1 1 0 013 6V4z" />
+            </svg>
+            {activeFilterCount > 0 && (
+              <span className="absolute -top-1 -right-1 w-4 h-4 bg-green-600 text-white text-xs
+                               rounded-full flex items-center justify-center font-bold">
+                {activeFilterCount}
+              </span>
+            )}
+          </button>
+
           <button
             className="btn-primary text-sm py-2 px-4"
             onClick={() => navigate('/games/new')}
           >
-            + New Game
+            + New
           </button>
         </div>
 
-        {/* Status filter chips */}
+        {/* Status chips */}
         <div className="flex gap-2 px-4 pb-3 overflow-x-auto no-scrollbar">
           {STATUS_FILTERS.map(({ value, label }) => (
             <button
@@ -55,9 +95,41 @@ export default function Games() {
             </button>
           ))}
         </div>
+
+        {/* Collapsible advanced filters */}
+        {showFilters && (
+          <div className="px-4 pb-4 space-y-3 border-t border-gray-100 pt-3">
+            <div>
+              <label className="label">Host name contains</label>
+              <input
+                className="input py-2"
+                placeholder="e.g. Alice"
+                value={hostSearch}
+                onChange={(e) => setHostSearch(e.target.value)}
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="label">From date</label>
+                <input type="date" className="input py-2" value={dateFrom}
+                  onChange={(e) => setDateFrom(e.target.value)} />
+              </div>
+              <div>
+                <label className="label">To date</label>
+                <input type="date" className="input py-2" value={dateTo}
+                  onChange={(e) => setDateTo(e.target.value)} />
+              </div>
+            </div>
+            {activeFilterCount > 0 && (
+              <button onClick={clearFilters} className="text-xs text-red-500 active:text-red-700 font-medium">
+                Clear filters
+              </button>
+            )}
+          </div>
+        )}
       </div>
 
-      {/* ── Content ────────────────────────────── */}
+      {/* ── Content ─────────────────────────────── */}
       <div className="px-4 pt-3 pb-4 space-y-2">
         {loading && <PageSpinner />}
 
@@ -66,12 +138,18 @@ export default function Games() {
         {!loading && !error && games?.length === 0 && (
           <EmptyState
             icon="🃏"
-            title={statusFilter ? `No ${statusFilter} games` : 'No games yet'}
-            description="Start a new game to begin tracking buy-ins and chip stacks."
+            title={activeFilterCount || statusFilter ? 'No matching games' : 'No games yet'}
+            description={
+              activeFilterCount || statusFilter
+                ? 'Try adjusting your filters.'
+                : 'Start a new game to begin tracking buy-ins and chip stacks.'
+            }
             action={
-              <button className="btn-primary" onClick={() => navigate('/games/new')}>
-                Start first game
-              </button>
+              !activeFilterCount && !statusFilter && (
+                <button className="btn-primary" onClick={() => navigate('/games/new')}>
+                  Start first game
+                </button>
+              )
             }
           />
         )}
@@ -79,6 +157,12 @@ export default function Games() {
         {games?.map((game) => (
           <GameCard key={game.id} game={game} onClick={() => navigate(`/games/${game.id}`)} />
         ))}
+
+        {!loading && games?.length > 0 && (
+          <p className="text-center text-xs text-gray-400 pt-1">
+            {games.length} game{games.length !== 1 ? 's' : ''}
+          </p>
+        )}
       </div>
     </>
   )
