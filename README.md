@@ -1,5 +1,7 @@
 # StackSettle
 
+[![CI](https://github.com/YOUR_USERNAME/stacksettle/actions/workflows/ci.yml/badge.svg)](https://github.com/YOUR_USERNAME/stacksettle/actions/workflows/ci.yml)
+
 A home poker settlement app for tracking buy-ins, rebuys, chip stacks, and
 calculating who owes what across multiple games — with debt minimization.
 
@@ -153,12 +155,37 @@ See `docs/deployment.md` for a full nginx + PM2 setup guide.
 
 ---
 
-## GitHub Actions CI
+## GitHub Actions
 
-On every push to `main`, the workflow:
-1. Installs dependencies
-2. Lints the frontend
-3. Runs a production build check
+### CI (automatic — every push / PR to `main`)
+
+Three parallel jobs after each push:
+
+| Job | What it does |
+|-----|-------------|
+| **Lint** | ESLint on the React client |
+| **Build** | Vite production build; uploads `client/dist/` as an artifact |
+| **Server check** | `node --check` syntax validation on every server file |
+
+Runs are cancelled automatically if a new push arrives before the previous one finishes.
+
+### Deploy workflows (manual trigger)
+
+| Workflow | File | Use case |
+|----------|------|----------|
+| Deploy via FTP | [deploy-ftp.yml](.github/workflows/deploy-ftp.yml) | Shared hosting (Hostinger, cPanel) |
+| Deploy via SSH | [deploy-ssh.yml](.github/workflows/deploy-ssh.yml) | VPS with PM2 |
+
+**Secrets required** — configure in GitHub → Settings → Secrets → Actions:
+
+| Secret | Used by |
+|--------|---------|
+| `FTP_HOST`, `FTP_USER`, `FTP_PASSWORD` | FTP deploy |
+| `SSH_HOST`, `SSH_USER`, `SSH_KEY`, `SSH_PORT` | SSH deploy |
+| `VITE_API_URL` | Both deploy workflows |
+| `DEPLOY_PATH` | SSH deploy |
+
+After adding secrets, trigger a deploy from **Actions → Deploy → Run workflow**.
 
 See [.github/workflows/ci.yml](.github/workflows/ci.yml).
 

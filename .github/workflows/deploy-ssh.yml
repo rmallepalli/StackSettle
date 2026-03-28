@@ -1,0 +1,72 @@
+name: Deploy (SSH – VPS)
+
+# Trigger manually or on push to main after CI passes.
+on:
+  workflow_dispatch:
+  # Uncomment to auto-deploy after CI:
+  # workflow_run:
+  #   workflows: ["CI"]
+  #   branches: [main]
+  #   types: [completed]
+
+# Required secrets:
+#   SSH_HOST       — server IP or hostname
+#   SSH_USER       — deploy user (e.g. deploy)
+#   SSH_KEY        — private key (add the public key to ~/.ssh/authorized_keys on server)
+#   SSH_PORT       — SSH port (default 22)
+#   VITE_API_URL   — e.g. https://yourdomain.com/api
+#   DEPLOY_PATH    — absolute server path, e.g. /var/www/stacksettle
+
+jobs:
+  deploy:
+    name: Build & Deploy via SSH
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+          cache-dependency-path: |
+            client/package-lock.json
+            server/package-lock.json
+
+      - name: Install client deps
+        run: npm ci
+        working-directory: client
+
+      - name: Build frontend
+        run: npm run build
+        working-directory: client
+        env:
+          VITE_API_URL: ${{ secrets.VITE_API_URL }}
+
+      - name: Install server deps (for upload)
+        run: npm ci --omit=dev
+        working-directory: server
+
+      - name: Sync files to server
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host:     ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key:      ${{ secrets.SSH_KEY }}
+          port:     ${{ secrets.SSH_PORT || 22 }}
+          source:   "client/dist/,server/"
+          target:   ${{ secrets.DEPLOY_PATH }}
+          strip_components: 0
+
+      - name: Restart server with PM2
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host:     ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key:      ${{ secrets.SSH_KEY }}
+          port:     ${{ secrets.SSH_PORT || 22 }}
+          script: |
+            cd ${{ secrets.DEPLOY_PATH }}/server
+            npm ci --omit=dev
+            pm2 restart stacksettle || pm2 start index.js --name stacksettle
+            pm2 save

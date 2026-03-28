@@ -6,38 +6,111 @@ on:
   pull_request:
     branches: [main]
 
+# Cancel in-progress runs on the same branch when a new push arrives
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
-  lint-and-build:
-    name: Lint & Build
+  # ─────────────────────────────────────────────
+  # Job 1: Lint frontend
+  # ─────────────────────────────────────────────
+  lint:
+    name: Lint (client)
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
+      - uses: actions/setup-node@v4
         with:
           node-version: '20'
-          cache: 'npm'
-          cache-dependency-path: |
-            package-lock.json
-            client/package-lock.json
-            server/package-lock.json
+          cache: npm
+          cache-dependency-path: client/package-lock.json
 
-      - name: Install root dependencies
-        run: npm install
+      - name: Install client deps
+        run: npm ci
+        working-directory: client
 
-      - name: Install client dependencies
-        run: cd client && npm install
+      - name: ESLint
+        run: npm run lint
+        working-directory: client
 
-      - name: Install server dependencies
-        run: cd server && npm install
+  # ─────────────────────────────────────────────
+  # Job 2: Production build
+  # ─────────────────────────────────────────────
+  build:
+    name: Build (client)
+    runs-on: ubuntu-latest
+    needs: lint
 
-      - name: Lint client
-        run: cd client && npm run lint
+    steps:
+      - uses: actions/checkout@v4
 
-      - name: Build client
-        run: cd client && npm run build
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+          cache-dependency-path: client/package-lock.json
+
+      - name: Install client deps
+        run: npm ci
+        working-directory: client
+
+      - name: Vite production build
+        run: npm run build
+        working-directory: client
         env:
-          VITE_API_URL: http://localhost:3001/api
+          # Use a relative /api path so the build is environment-agnostic.
+          # The hosting provider sets VITE_API_URL at deploy time if needed.
+          VITE_API_URL: /api
+
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: client-dist
+          path: client/dist
+          retention-days: 3
+
+  # ─────────────────────────────────────────────
+  # Job 3: Validate server (syntax + modules)
+  # ─────────────────────────────────────────────
+  server-check:
+    name: Server check
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+          cache-dependency-path: server/package-lock.json
+
+      - name: Install server deps
+        run: npm ci
+        working-directory: server
+
+      - name: Syntax check (node --check)
+        run: |
+          node --check index.js
+          node --check middleware/auth.js
+          node --check middleware/errorHandler.js
+          node --check models/db.js
+          node --check models/playerQueries.js
+          node --check models/gameQueries.js
+          node --check models/gamePlayerQueries.js
+          node --check models/transactionQueries.js
+          node --check models/settlementQueries.js
+          node --check utils/debtMinimizer.js
+          node --check routes/auth.js
+          node --check routes/players.js
+          node --check routes/games.js
+          node --check routes/transactions.js
+          node --check routes/settlements.js
+          node --check controllers/playersController.js
+          node --check controllers/gamesController.js
+          node --check controllers/transactionsController.js
+          node --check controllers/settlementsController.js
+        working-directory: server
