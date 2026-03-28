@@ -60,11 +60,18 @@ Edit `server/.env` with your database credentials and a JWT secret.
 CREATE DATABASE stacksettle;
 ```
 
-Then run the migration:
+Then run the migrations:
 
 ```bash
 cd server
-psql -U postgres -d stacksettle -f models/schema.sql
+npm run migrate          # apply all migrations
+npm run migrate:seed     # also load sample dev data (optional)
+```
+
+Or with psql directly:
+
+```bash
+psql -U postgres -d stacksettle -f server/models/schema.sql
 ```
 
 ### 5. Start development servers

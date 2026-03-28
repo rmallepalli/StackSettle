@@ -5,7 +5,9 @@
   "main": "index.js",
   "scripts": {
     "start": "node index.js",
-    "dev": "nodemon index.js"
+    "dev": "nodemon index.js",
+    "migrate": "node models/migrate.js",
+    "migrate:seed": "node models/migrate.js --seed"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",
