@@ -1,6 +1,6 @@
 # StackSettle
 
-[![CI](https://github.com/YOUR_USERNAME/stacksettle/actions/workflows/ci.yml/badge.svg)](https://github.com/YOUR_USERNAME/stacksettle/actions/workflows/ci.yml)
+[![CI](https://github.com/rmallepalli/StackSettle/actions/workflows/ci.yml/badge.svg)](https://github.com/rmallepalli/StackSettle/actions/workflows/ci.yml)
 
 A home poker settlement app for tracking buy-ins, rebuys, chip stacks, and
 calculating who owes what across multiple games — with debt minimization.
