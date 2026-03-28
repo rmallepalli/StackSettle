@@ -133,25 +133,27 @@ stacksettle/
 
 ---
 
-## Deployment (Shared Hosting / cPanel)
+## Deployment
 
-### Option A: Node.js App on Hostinger / cPanel
+See **[docs/deployment.md](docs/deployment.md)** for the full step-by-step guide covering:
 
-1. Build the frontend:
-   ```bash
-   npm run build
-   ```
-2. Upload `client/dist/` contents to `public_html/`
-3. Upload `server/` to a directory outside `public_html` (e.g., `~/stacksettle-server/`)
-4. Set up Node.js app in cPanel pointing to `server/index.js`
-5. Configure environment variables in cPanel's Node.js app manager
-6. Set up PostgreSQL database via cPanel → PostgreSQL Databases
+| Option | Guide covers |
+|--------|-------------|
+| **Shared hosting** (Hostinger, cPanel) | PostgreSQL setup, Node.js App config, `.htaccess` proxy, FTP deploy |
+| **VPS** (Ubuntu 22.04) | PostgreSQL, nginx reverse proxy, PM2, SSL via Let's Encrypt |
+| **GitHub Actions** | Automated FTP and SSH deploy workflows |
+| **Database backup** | `pg_dump` one-liner + daily cron |
 
-### Option B: VPS (recommended)
+**Quick summary for shared hosting:**
+```bash
+# 1. Build locally
+cd client && VITE_API_URL=https://yourdomain.com/api npm run build
 
-Use a reverse proxy (nginx) in front of the Express server and serve the React build as static files.
-
-See `docs/deployment.md` for a full nginx + PM2 setup guide.
+# 2. Upload client/dist/ → public_html/  (FTP or cPanel File Manager)
+# 3. Upload server/     → ~/stacksettle-server/
+# 4. On server: node models/migrate.js
+# 5. cPanel → Setup Node.js App → Restart
+```
 
 ---
 
