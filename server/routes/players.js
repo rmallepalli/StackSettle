@@ -1,9 +1,13 @@
 const router = require('express').Router()
-const auth = require('../middleware/auth')
+const auth   = require('../middleware/auth')
+const c      = require('../controllers/playersController')
 
-// Placeholder — full implementation in Step 3
 router.use(auth)
 
-router.get('/', (_req, res) => res.json([]))
+router.get('/',     c.list)
+router.get('/:id',  c.getOne)
+router.post('/',    c.create)
+router.put('/:id',  c.update)
+router.delete('/:id', c.remove)
 
 module.exports = router

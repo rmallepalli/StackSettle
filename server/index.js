@@ -23,6 +23,9 @@ app.use('/api/settlements', require('./routes/settlements'))
 // Health check
 app.get('/api/health', (_req, res) => res.json({ status: 'ok' }))
 
+// Global error handler (must be last)
+app.use(require('./middleware/errorHandler'))
+
 // Serve React build in production
 if (process.env.NODE_ENV === 'production') {
   const clientBuild = path.join(__dirname, '../client/dist')
