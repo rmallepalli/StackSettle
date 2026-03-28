@@ -191,12 +191,20 @@ function GameCard({ game, onClick }) {
       className="card w-full text-left active:bg-gray-50 transition-colors"
     >
       <div className="flex items-start justify-between gap-2">
-        <div className="min-w-0">
+        <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2 flex-wrap">
-            <span className="font-semibold text-gray-900">{game.host_name}'s Game</span>
+            <span className="font-semibold text-gray-900">{dateStr}</span>
             <StatusBadge status={game.status} />
           </div>
-          <p className="text-xs text-gray-500 mt-0.5">{dateStr}</p>
+          {/* Host name displayed prominently below the date */}
+          <div className="flex items-center gap-1.5 mt-1">
+            <svg className="w-3.5 h-3.5 text-gray-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+            </svg>
+            <span className="text-sm font-medium text-gray-700">{game.host_name}</span>
+            <span className="text-xs text-gray-400">hosting</span>
+          </div>
         </div>
         <svg className="w-5 h-5 text-gray-300 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
@@ -204,6 +212,7 @@ function GameCard({ game, onClick }) {
       </div>
 
       <div className="flex items-center gap-4 mt-3 pt-3 border-t border-gray-50">
+        <Stat label="Host" value={game.host_name} />
         <Stat label="Players" value={game.player_count ?? 0} />
         <Stat label="Total Pot" value={<CurrencyDisplay amount={game.total_pot ?? 0} />} />
         {game.status === 'settled' && game.settled_date && (

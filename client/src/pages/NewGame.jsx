@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import toast from 'react-hot-toast'
 import { format } from 'date-fns'
@@ -15,28 +15,72 @@ const EMPTY_NEW_PLAYER = {
   cashapp_tag: '', other_payment: '',
 }
 
+const DRAFT_KEY = 'ss_new_game_draft'
+
+function loadDraft() {
+  try {
+    const raw = localStorage.getItem(DRAFT_KEY)
+    if (!raw) return null
+    const d = JSON.parse(raw)
+    return {
+      ...d,
+      selectedIds: new Set(d.selectedIds || []),
+    }
+  } catch { return null }
+}
+
+function saveDraft(data) {
+  try {
+    localStorage.setItem(DRAFT_KEY, JSON.stringify({
+      ...data,
+      selectedIds: [...data.selectedIds],
+    }))
+  } catch {}
+}
+
+function clearDraft() {
+  localStorage.removeItem(DRAFT_KEY)
+}
+
 export default function NewGame() {
   const navigate = useNavigate()
   const { data: allPlayers, loading: playersLoading } = useFetch(getPlayers)
 
+  // Restore from draft on mount
+  const draft = loadDraft()
+
   // Game fields
-  const [hostName, setHostName]   = useState('')
-  const [gameDate, setGameDate]   = useState(format(new Date(), 'yyyy-MM-dd'))
-  const [notes, setNotes]         = useState('')
+  const [hostName, setHostName]   = useState(draft?.hostName || '')
+  const [gameDate, setGameDate]   = useState(draft?.gameDate || format(new Date(), 'yyyy-MM-dd'))
+  const [notes, setNotes]         = useState(draft?.notes || '')
 
   // Player selection
   const [search, setSearch]             = useState('')
-  const [selectedIds, setSelectedIds]   = useState(new Set())
-  const [buyIns, setBuyIns]             = useState({}) // playerId → amount string
+  const [selectedIds, setSelectedIds]   = useState(draft?.selectedIds || new Set())
+  const [buyIns, setBuyIns]             = useState(draft?.buyIns || {})
 
   // New-player-on-the-fly modal
   const [showNewPlayer, setShowNewPlayer] = useState(false)
   const [newPlayerForm, setNewPlayerForm] = useState(EMPTY_NEW_PLAYER)
 
   // Transient new players (not yet in DB; added via the modal)
-  const [pendingPlayers, setPendingPlayers] = useState([]) // [{ tempId, ...formData }]
+  const [pendingPlayers, setPendingPlayers] = useState(draft?.pendingPlayers || [])
 
-  const [saving, setSaving] = useState(false)
+  const [saving, setSaving]     = useState(false)
+  const [draftSaved, setDraftSaved] = useState(false)
+
+  // ── Auto-save draft whenever form state changes ────────
+  const persistDraft = useCallback(() => {
+    saveDraft({ hostName, gameDate, notes, selectedIds, buyIns, pendingPlayers })
+    setDraftSaved(true)
+    setTimeout(() => setDraftSaved(false), 1500)
+  }, [hostName, gameDate, notes, selectedIds, buyIns, pendingPlayers])
+
+  useEffect(() => {
+    // Debounce: save 800ms after last change
+    const t = setTimeout(persistDraft, 800)
+    return () => clearTimeout(t)
+  }, [persistDraft])
 
   // ── Derived ────────────────────────────────────────────
   const filteredExisting = useMemo(() => {
@@ -132,6 +176,7 @@ export default function NewGame() {
       }
       await Promise.all(txPromises)
 
+      clearDraft()
       toast.success('Game created!')
       navigate(`/games/${game.id}`)
     } catch (e) {
@@ -141,16 +186,29 @@ export default function NewGame() {
     }
   }
 
+  const handleDiscard = () => {
+    clearDraft()
+    navigate('/games')
+  }
+
   // ── Render ─────────────────────────────────────────────
   return (
     <>
       <div className="sticky top-14 z-10 bg-gray-50/95 backdrop-blur-sm border-b border-gray-100 px-4 py-3 flex items-center gap-3">
-        <button onClick={() => navigate('/games')} className="text-gray-500 active:text-gray-700 p-1 -ml-1">
+        <button onClick={handleDiscard} className="text-gray-500 active:text-gray-700 p-1 -ml-1">
           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
           </svg>
         </button>
-        <h1 className="flex-1 text-lg font-bold text-gray-900">New Game</h1>
+        <div className="flex-1 min-w-0">
+          <h1 className="text-lg font-bold text-gray-900">New Game</h1>
+          {draft && !draftSaved && (
+            <p className="text-xs text-gray-400">Draft restored</p>
+          )}
+          {draftSaved && (
+            <p className="text-xs text-green-600">Draft saved</p>
+          )}
+        </div>
         <button
           className="btn-primary text-sm py-2 px-4"
           onClick={handleCreate}

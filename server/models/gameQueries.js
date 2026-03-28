@@ -106,7 +106,7 @@ const markSettled = (id) =>
 
 const remove = (id) =>
   db.query(
-    `DELETE FROM games WHERE id = $1 AND status = 'open' RETURNING id`,
+    `DELETE FROM games WHERE id = $1 AND status IN ('open', 'finalized') RETURNING id`,
     [id]
   )
 

@@ -377,11 +377,19 @@ export default function GameDetail() {
 
         {/* ── Finalized banner ───────────────────── */}
         {isFinalized && (
-          <div className="card bg-yellow-50 border-yellow-200 text-center py-4 space-y-1">
-            <p className="text-sm font-semibold text-yellow-800">Game Finalized</p>
-            <p className="text-xs text-yellow-600">
+          <div className="card bg-yellow-50 border-yellow-200 py-4 space-y-1">
+            <p className="text-sm font-semibold text-yellow-800 text-center">Game Finalized</p>
+            <p className="text-xs text-yellow-600 text-center">
               Results locked. Tap any player's amount to adjust, or head to Settlements.
             </p>
+            <div className="pt-2 text-center">
+              <button
+                onClick={() => setDeleteConfirm(true)}
+                className="text-xs text-red-400 active:text-red-600 font-medium"
+              >
+                Delete this game
+              </button>
+            </div>
           </div>
         )}
 
@@ -608,7 +616,7 @@ export default function GameDetail() {
       <ConfirmDialog
         open={deleteConfirm}
         title="Delete game?"
-        message="This permanently deletes the game and all its transactions. This can't be undone."
+        message={`This permanently deletes the ${isFinalized ? 'finalized' : ''} game and all its transactions. This can't be undone.`}
         confirmLabel="Delete"
         danger
         loading={actionLoading}
