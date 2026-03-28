@@ -8,7 +8,7 @@ import PlayerForm from '../components/PlayerForm.jsx'
 import PaymentBadges from '../components/PaymentBadges.jsx'
 import EmptyState from '../components/EmptyState.jsx'
 import ErrorMessage from '../components/ErrorMessage.jsx'
-import { PageSpinner } from '../components/Spinner.jsx'
+import { ListSkeleton, PlayerCardSkeleton } from '../components/Skeleton.jsx'
 
 const EMPTY_FORM = {
   name: '', phone: '', email: '',
@@ -122,7 +122,7 @@ export default function Players() {
 
       {/* ── Content ────────────────────────────────── */}
       <div className="px-4 pt-3 pb-4 space-y-2">
-        {loading && <PageSpinner />}
+        {loading && <ListSkeleton Card={PlayerCardSkeleton} count={5} />}
 
         {error && <ErrorMessage message={error} onRetry={refetch} />}
 

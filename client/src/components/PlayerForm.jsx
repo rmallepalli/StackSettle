@@ -13,17 +13,17 @@ export default function PlayerForm({ data, onChange }) {
       {/* Basic info */}
       <div>
         <label className="label">Name <span className="text-red-500">*</span></label>
-        <input className="input" placeholder="Full name" autoFocus {...field('name')} />
+        <input className="input" placeholder="Full name" autoComplete="name" autoFocus {...field('name')} />
       </div>
 
       <div className="grid grid-cols-2 gap-3">
         <div>
           <label className="label">Phone</label>
-          <input className="input" type="tel" placeholder="555-0100" {...field('phone')} />
+          <input className="input" type="tel" inputMode="tel" autoComplete="tel" placeholder="555-0100" {...field('phone')} />
         </div>
         <div>
           <label className="label">Email</label>
-          <input className="input" type="email" placeholder="player@email.com" {...field('email')} />
+          <input className="input" type="email" inputMode="email" autoComplete="email" placeholder="player@email.com" {...field('email')} />
         </div>
       </div>
 

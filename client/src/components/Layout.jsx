@@ -39,50 +39,57 @@ export default function Layout() {
   const navigate = useNavigate()
 
   return (
-    <div className="min-h-screen flex flex-col bg-gray-50">
-      {/* Top header */}
-      <header className="bg-white border-b border-gray-200 px-4 h-14 flex items-center justify-between sticky top-0 z-20 shrink-0">
-        <button
-          onClick={() => navigate('/games')}
-          className="flex items-center gap-2 active:opacity-70"
-        >
-          <span className="text-2xl leading-none">♠</span>
-          <span className="font-bold text-gray-900 text-lg tracking-tight">StackSettle</span>
-        </button>
-        <button
-          onClick={() => { logout(); navigate('/login') }}
-          className="text-sm text-gray-400 active:text-gray-600 px-2 py-1"
-        >
-          Logout
-        </button>
-      </header>
+    /* Full viewport, centered column — max-w-lg constrains on desktop */
+    <div className="min-h-screen flex flex-col bg-gray-100 sm:bg-gray-200">
+      <div className="flex-1 flex flex-col w-full max-w-lg mx-auto bg-gray-50 shadow-sm sm:shadow-xl relative">
 
-      {/* Page content */}
-      <main className="flex-1 pb-20 min-h-0">
-        <Outlet />
-      </main>
-
-      {/* Bottom navigation bar */}
-      <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 flex z-20 safe-area-bottom">
-        {NAV.map(({ to, label, icon }) => (
-          <NavLink
-            key={to}
-            to={to}
-            className={({ isActive }) =>
-              `flex-1 flex flex-col items-center justify-center py-2 gap-0.5 text-xs font-medium transition-colors ${
-                isActive ? 'text-green-600' : 'text-gray-400'
-              }`
-            }
+        {/* Top header */}
+        <header className="bg-white border-b border-gray-200 px-4 h-14 flex items-center justify-between sticky top-0 z-20 shrink-0">
+          <button
+            onClick={() => navigate('/games')}
+            className="flex items-center gap-2 active:opacity-70 select-none"
           >
-            {({ isActive }) => (
-              <>
-                {icon(isActive)}
-                <span>{label}</span>
-              </>
-            )}
-          </NavLink>
-        ))}
-      </nav>
+            <span className="text-2xl leading-none">♠</span>
+            <span className="font-bold text-gray-900 text-lg tracking-tight">StackSettle</span>
+          </button>
+          <button
+            onClick={() => { logout(); navigate('/login') }}
+            className="text-sm text-gray-400 active:text-gray-600 px-2 py-1"
+          >
+            Logout
+          </button>
+        </header>
+
+        {/* Page content */}
+        <main className="flex-1 pb-20 min-h-0 overflow-y-auto">
+          <Outlet />
+        </main>
+
+        {/* Bottom navigation */}
+        <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 flex z-20 safe-area-bottom sm:sticky sm:bottom-auto sm:top-auto">
+          {/* On desktop the nav is still at bottom of the fixed column */}
+          <div className="w-full max-w-lg mx-auto flex">
+            {NAV.map(({ to, label, icon }) => (
+              <NavLink
+                key={to}
+                to={to}
+                className={({ isActive }) =>
+                  `flex-1 flex flex-col items-center justify-center py-2 gap-0.5 text-xs font-medium transition-colors select-none ${
+                    isActive ? 'text-green-600' : 'text-gray-400'
+                  }`
+                }
+              >
+                {({ isActive }) => (
+                  <>
+                    {icon(isActive)}
+                    <span>{label}</span>
+                  </>
+                )}
+              </NavLink>
+            ))}
+          </div>
+        </nav>
+      </div>
     </div>
   )
 }

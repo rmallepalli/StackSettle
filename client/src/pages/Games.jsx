@@ -7,7 +7,7 @@ import StatusBadge from '../components/StatusBadge.jsx'
 import CurrencyDisplay from '../components/CurrencyDisplay.jsx'
 import EmptyState from '../components/EmptyState.jsx'
 import ErrorMessage from '../components/ErrorMessage.jsx'
-import { PageSpinner } from '../components/Spinner.jsx'
+import { ListSkeleton, GameCardSkeleton } from '../components/Skeleton.jsx'
 
 const STATUS_FILTERS = [
   { value: '',          label: 'All' },
@@ -131,7 +131,7 @@ export default function Games() {
 
       {/* ── Content ─────────────────────────────── */}
       <div className="px-4 pt-3 pb-4 space-y-2">
-        {loading && <PageSpinner />}
+        {loading && <ListSkeleton Card={GameCardSkeleton} count={4} />}
 
         {error && <ErrorMessage message={error} onRetry={refetch} />}
 
@@ -164,6 +164,18 @@ export default function Games() {
           </p>
         )}
       </div>
+
+      {/* FAB — quick new game, visible when scrolled past header button */}
+      <button
+        onClick={() => navigate('/games/new')}
+        className="fixed bottom-24 right-4 sm:right-[calc(50%-theme(maxWidth.lg)/2+1rem)]
+                   w-14 h-14 bg-green-600 text-white rounded-full shadow-lg
+                   flex items-center justify-center text-2xl
+                   active:bg-green-700 transition-colors z-10"
+        aria-label="New game"
+      >
+        +
+      </button>
     </>
   )
 }

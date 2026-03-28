@@ -437,7 +437,7 @@ export default function GameDetail() {
             <label className="label">Amount</label>
             <div className="relative">
               <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 font-medium">$</span>
-              <input type="number" min="1" step="5" className="input pl-7 text-lg font-semibold"
+              <input type="number" inputMode="decimal" min="1" step="5" className="input pl-7 text-lg font-semibold"
                 placeholder="0" value={txAmount} onChange={(e) => setTxAmount(e.target.value)} autoFocus />
             </div>
           </div>
@@ -484,7 +484,7 @@ export default function GameDetail() {
               <span className="flex-1 text-sm font-medium text-gray-900 truncate">{p.name}</span>
               <div className="relative w-28">
                 <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400 text-sm">$</span>
-                <input type="number" min="0" step="5" className="input pl-6 pr-2 py-2 text-sm text-right"
+                <input type="number" inputMode="decimal" min="0" step="5" className="input pl-6 pr-2 py-2 text-right"
                   placeholder="0" value={stacks[p.player_id]??''}
                   onChange={(e) => setStacks((prev) => ({...prev,[p.player_id]:e.target.value}))} />
               </div>
@@ -519,7 +519,7 @@ export default function GameDetail() {
               </p>
               <div className="relative">
                 <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 font-medium">$</span>
-                <input type="number" min="0" step="1" className="input pl-7 text-lg font-semibold"
+                <input type="number" inputMode="decimal" min="0" step="1" className="input pl-7 text-lg font-semibold"
                   placeholder={adjustModal.ending_stack ?? '0'}
                   value={adjustAmount} onChange={(e) => setAdjustAmount(e.target.value)} autoFocus />
               </div>

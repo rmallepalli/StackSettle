@@ -341,9 +341,10 @@ function PlayerRow({ id, name, sub, checked, onToggle, buyIn, onBuyIn, isNew, on
           <span className="text-sm text-gray-400">$</span>
           <input
             type="number"
+            inputMode="decimal"
             min="0"
             step="5"
-            className="w-20 border border-gray-200 rounded-lg px-2 py-1 text-sm text-right
+            className="w-20 border border-gray-200 rounded-lg px-2 py-1 text-right
                        focus:outline-none focus:ring-2 focus:ring-green-500"
             placeholder="Buy-in"
             value={buyIn}
