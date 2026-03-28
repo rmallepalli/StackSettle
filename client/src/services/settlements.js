@@ -1,0 +1,9 @@
+import api from '../utils/api.js'
+
+export const getSettlements = () => api.get('/settlements').then(r => r.data)
+
+export const calculateSettlement = (params) =>
+  api.post('/settlements/calculate', params).then(r => r.data)
+
+export const saveSettlement = (data) =>
+  api.post('/settlements', data).then(r => r.data)
