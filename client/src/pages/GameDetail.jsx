@@ -274,19 +274,19 @@ export default function GameDetail() {
   return (
     <>
       {/* ── Header ──────────────────────────────── */}
-      <div className="sticky top-14 z-10 bg-gray-50/95 backdrop-blur-sm border-b border-gray-100 px-4 py-3 flex items-center gap-3">
-        <button onClick={() => navigate('/games')} className="text-gray-500 p-1 -ml-1 active:text-gray-700">
+      <div className="sticky top-14 z-10 bg-slate-900/95 backdrop-blur-sm border-b border-slate-700 px-4 py-3 flex items-center gap-3">
+        <button onClick={() => navigate('/games')} className="text-slate-500 p-1 -ml-1 active:text-slate-300">
           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
           </svg>
         </button>
         <div className="flex-1 min-w-0">
-          <h1 className="font-bold text-gray-900 truncate">{game.host_name}'s Game</h1>
-          <p className="text-xs text-gray-500">{dateStr}</p>
+          <h1 className="font-bold text-slate-100 truncate">{game.host_name}'s Game</h1>
+          <p className="text-xs text-slate-500">{dateStr}</p>
         </div>
         <StatusBadge status={game.status} />
         {isOpen && (
-          <button onClick={openEditGame} className="text-gray-400 active:text-gray-700 p-1">
+          <button onClick={openEditGame} className="text-slate-500 active:text-slate-200 p-1">
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
                 d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
@@ -315,16 +315,16 @@ export default function GameDetail() {
         {(isOpen || isLocked) && (
           <section>
             <div className="flex items-center justify-between mb-2">
-              <h2 className="font-semibold text-gray-900 text-sm">
+              <h2 className="font-semibold text-slate-100 text-sm">
                 {isOpen ? 'Players' : 'Transactions'}
               </h2>
               {isOpen && (
                 <div className="flex gap-3">
-                  <button className="text-xs text-green-600 font-medium active:text-green-800"
+                  <button className="text-xs text-emerald-400 font-medium active:text-emerald-300"
                     onClick={() => setAddPlayerModal(true)}>
                     + Existing
                   </button>
-                  <button className="text-xs text-green-600 font-medium active:text-green-800"
+                  <button className="text-xs text-emerald-400 font-medium active:text-emerald-300"
                     onClick={() => { setNewPlayerForm(EMPTY_PLAYER); setNewPlayerModal(true) }}>
                     + New
                   </button>
@@ -346,7 +346,7 @@ export default function GameDetail() {
                 />
               ))}
               {game.players.length === 0 && (
-                <p className="text-sm text-gray-400 text-center py-6">
+                <p className="text-sm text-slate-500 text-center py-6">
                   No players yet.{isOpen && ' Use "+ Existing" or "+ New" above.'}
                 </p>
               )}
@@ -361,7 +361,7 @@ export default function GameDetail() {
               Enter Ending Stacks
             </button>
             <button
-              className="w-full py-3 rounded-xl border border-green-200 text-green-700 font-semibold text-sm active:bg-green-50 transition-colors"
+              className="w-full py-3 rounded-xl border border-emerald-700/60 text-emerald-400 font-semibold text-sm active:bg-emerald-900/20 transition-colors"
               onClick={() => setFinalizeConfirm(true)}
             >
               Finalize Game
@@ -377,9 +377,9 @@ export default function GameDetail() {
 
         {/* ── Finalized banner ───────────────────── */}
         {isFinalized && (
-          <div className="card bg-yellow-50 border-yellow-200 py-4 space-y-1">
-            <p className="text-sm font-semibold text-yellow-800 text-center">Game Finalized</p>
-            <p className="text-xs text-yellow-600 text-center">
+          <div className="card bg-amber-900/20 border-amber-700/50 py-4 space-y-1">
+            <p className="text-sm font-semibold text-amber-300 text-center">Game Finalized</p>
+            <p className="text-xs text-amber-500 text-center">
               Results locked. Tap any player's amount to adjust, or head to Settlements.
             </p>
             <div className="pt-2 text-center">
@@ -395,10 +395,10 @@ export default function GameDetail() {
 
         {/* ── Settled banner ─────────────────────── */}
         {isSettled && (
-          <div className="card bg-gray-50 border-gray-200 text-center py-4">
-            <p className="text-sm font-semibold text-gray-700">Game Settled</p>
+          <div className="card bg-slate-700/40 border-slate-600 text-center py-4">
+            <p className="text-sm font-semibold text-slate-300">Game Settled</p>
             {game.settled_date && (
-              <p className="text-xs text-gray-400 mt-0.5">
+              <p className="text-xs text-slate-500 mt-0.5">
                 Settled on {format(new Date(game.settled_date), 'MMMM d, yyyy')}
               </p>
             )}
@@ -408,8 +408,8 @@ export default function GameDetail() {
         {/* ── Notes ─────────────────────────────── */}
         {game.notes && (
           <div className="card">
-            <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">Notes</p>
-            <p className="text-sm text-gray-700">{game.notes}</p>
+            <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Notes</p>
+            <p className="text-sm text-slate-300">{game.notes}</p>
           </div>
         )}
       </div>
@@ -433,10 +433,10 @@ export default function GameDetail() {
         }
       >
         <div className="space-y-4">
-          <div className="flex rounded-xl overflow-hidden border border-gray-200">
+          <div className="flex rounded-xl overflow-hidden border border-slate-600">
             {['buy','rebuy'].map((t) => (
               <button key={t} onClick={() => setTxType(t)}
-                className={`flex-1 py-2.5 text-sm font-medium transition-colors ${txType===t ? 'bg-green-600 text-white' : 'bg-white text-gray-600'}`}>
+                className={`flex-1 py-2.5 text-sm font-medium transition-colors ${txType===t ? 'bg-emerald-600 text-white' : 'bg-slate-700 text-slate-300'}`}>
                 {t === 'buy' ? 'Buy-in' : 'Rebuy'}
               </button>
             ))}
@@ -444,25 +444,25 @@ export default function GameDetail() {
           <div>
             <label className="label">Amount</label>
             <div className="relative">
-              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 font-medium">$</span>
+              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 font-medium">$</span>
               <input type="number" inputMode="decimal" min="1" step="5" className="input pl-7 text-lg font-semibold"
                 placeholder="0" value={txAmount} onChange={(e) => setTxAmount(e.target.value)} autoFocus />
             </div>
           </div>
           <div>
-            <p className="text-xs text-gray-400 mb-2">Quick amounts</p>
+            <p className="text-xs text-slate-500 mb-2">Quick amounts</p>
             <div className="flex flex-wrap gap-2">
               {[20, 40, 50, 60, 100, 200].map((amt) => (
                 <button key={amt} onClick={() => setTxAmount(String(amt))}
-                  className={`px-3 py-1.5 rounded-xl text-sm font-medium border transition-colors ${txAmount===String(amt) ? 'bg-green-600 text-white border-green-600' : 'bg-white text-gray-700 border-gray-200'}`}>
+                  className={`px-3 py-1.5 rounded-xl text-sm font-medium border transition-colors ${txAmount===String(amt) ? 'bg-emerald-600 text-white border-emerald-600' : 'bg-slate-700 text-slate-300 border-slate-600'}`}>
                   ${amt}
                 </button>
               ))}
             </div>
           </div>
           {txModal && (
-            <p className="text-xs text-gray-400 text-center">
-              Current total: <span className="font-semibold text-gray-700">${parseFloat(txModal.buy_in_total||0).toFixed(2)}</span>
+            <p className="text-xs text-slate-500 text-center">
+              Current total: <span className="font-semibold text-slate-300">${parseFloat(txModal.buy_in_total||0).toFixed(2)}</span>
             </p>
           )}
         </div>
@@ -483,15 +483,15 @@ export default function GameDetail() {
         }
       >
         <div className="space-y-3">
-          <p className="text-xs text-gray-500">Enter each player's chip count. Total must equal ${totalPot.toFixed(2)}.</p>
+          <p className="text-xs text-slate-500">Enter each player's chip count. Total must equal ${totalPot.toFixed(2)}.</p>
           {game.players.map((p) => (
             <div key={p.player_id} className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-full bg-green-100 text-green-700 font-bold text-xs flex items-center justify-center shrink-0 uppercase">
+              <div className="w-8 h-8 rounded-full bg-emerald-900/40 text-emerald-400 font-bold text-xs flex items-center justify-center shrink-0 uppercase">
                 {p.name.charAt(0)}
               </div>
-              <span className="flex-1 text-sm font-medium text-gray-900 truncate">{p.name}</span>
+              <span className="flex-1 text-sm font-medium text-slate-100 truncate">{p.name}</span>
               <div className="relative w-28">
-                <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400 text-sm">$</span>
+                <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-500 text-sm">$</span>
                 <input type="number" inputMode="decimal" min="0" step="5" className="input pl-6 pr-2 py-2 text-right"
                   placeholder="0" value={stacks[p.player_id]??''}
                   onChange={(e) => setStacks((prev) => ({...prev,[p.player_id]:e.target.value}))} />
@@ -515,24 +515,24 @@ export default function GameDetail() {
       >
         {adjustModal && (
           <div className="space-y-4">
-            <div className="card bg-gray-50 space-y-1 py-3">
+            <div className="card bg-slate-700/50 space-y-1 py-3">
               <Row label="Bought in" value={`$${parseFloat(adjustModal.buy_in_total||0).toFixed(2)}`} />
               <Row label="Ending stack" value={adjustModal.ending_stack != null ? `$${parseFloat(adjustModal.ending_stack).toFixed(2)}` : '—'} />
               <Row label="Net result" value={<CurrencyDisplay amount={adjustModal.net_result} netMode />} />
             </div>
             <div>
               <label className="label">Adjusted cash-out amount</label>
-              <p className="text-xs text-gray-400 mb-2">
+              <p className="text-xs text-slate-500 mb-2">
                 Override the ending stack for settlement purposes (e.g. chip rounding, side bets).
               </p>
               <div className="relative">
-                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 font-medium">$</span>
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 font-medium">$</span>
                 <input type="number" inputMode="decimal" min="0" step="1" className="input pl-7 text-lg font-semibold"
                   placeholder={adjustModal.ending_stack ?? '0'}
                   value={adjustAmount} onChange={(e) => setAdjustAmount(e.target.value)} autoFocus />
               </div>
               {adjustAmount !== '' && adjustModal && (
-                <p className="text-xs text-gray-400 mt-2">
+                <p className="text-xs text-slate-500 mt-2">
                   New net: <CurrencyDisplay amount={parseFloat(adjustAmount) - parseFloat(adjustModal.buy_in_total||0)} netMode />
                 </p>
               )}
@@ -633,8 +633,8 @@ export default function GameDetail() {
 function ResultsSummary({ players, onAdjust }) {
   return (
     <section>
-      <h2 className="font-semibold text-gray-900 text-sm mb-2">Results</h2>
-      <div className="card py-0 overflow-hidden divide-y divide-gray-50">
+      <h2 className="font-semibold text-slate-100 text-sm mb-2">Results</h2>
+      <div className="card py-0 overflow-hidden divide-y divide-slate-700">
         {players.map((p, i) => {
           const net      = parseFloat(p.net_result)
           const adjusted = p.adjusted_amount != null ? parseFloat(p.adjusted_amount) : null
@@ -644,21 +644,21 @@ function ResultsSummary({ players, onAdjust }) {
           return (
             <div key={p.player_id} className="flex items-center gap-3 px-4 py-3">
               {/* Rank */}
-              <span className="text-xs font-bold text-gray-300 w-4 text-right">{i + 1}</span>
+              <span className="text-xs font-bold text-slate-600 w-4 text-right">{i + 1}</span>
 
               {/* Avatar */}
               <div className={`w-8 h-8 rounded-full font-bold text-xs flex items-center justify-center shrink-0 uppercase
-                ${net > 0 ? 'bg-green-100 text-green-700' : net < 0 ? 'bg-red-100 text-red-600' : 'bg-gray-100 text-gray-500'}`}>
+                ${net > 0 ? 'bg-emerald-900/40 text-emerald-400' : net < 0 ? 'bg-red-900/40 text-red-400' : 'bg-slate-700 text-slate-400'}`}>
                 {p.name.charAt(0)}
               </div>
 
               {/* Name */}
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-gray-900 truncate">{p.name}</p>
-                <p className="text-xs text-gray-400">
+                <p className="text-sm font-medium text-slate-100 truncate">{p.name}</p>
+                <p className="text-xs text-slate-500">
                   In ${parseFloat(p.buy_in_total||0).toFixed(2)}
                   {cashOut != null && ` → Out $${cashOut.toFixed(2)}`}
-                  {adjusted != null && <span className="text-orange-500"> (adj)</span>}
+                  {adjusted != null && <span className="text-orange-400"> (adj)</span>}
                 </p>
               </div>
 
@@ -667,7 +667,7 @@ function ResultsSummary({ players, onAdjust }) {
                 <CurrencyDisplay amount={net} netMode className="text-base" />
                 {onAdjust && (
                   <button onClick={() => onAdjust(p)}
-                    className="text-gray-300 active:text-gray-600 p-1" aria-label="Adjust">
+                    className="text-slate-600 active:text-slate-300 p-1" aria-label="Adjust">
                     <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
                         d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
@@ -696,13 +696,13 @@ function PlayerRow({ player, transactions, isOpen, onBuyRebuy, onRemove, onDelet
     <div className="card overflow-hidden py-0">
       <div className="flex items-center gap-3 py-3">
         <div className={`w-9 h-9 rounded-full font-bold text-xs flex items-center justify-center shrink-0 uppercase
-          ${net != null ? net > 0 ? 'bg-green-100 text-green-700' : net < 0 ? 'bg-red-100 text-red-600' : 'bg-gray-100 text-gray-500'
-            : 'bg-gray-100 text-gray-600'}`}>
+          ${net != null ? net > 0 ? 'bg-emerald-900/40 text-emerald-400' : net < 0 ? 'bg-red-900/40 text-red-400' : 'bg-slate-700 text-slate-400'
+            : 'bg-slate-700 text-slate-400'}`}>
           {player.name.charAt(0)}
         </div>
         <div className="flex-1 min-w-0">
-          <p className="font-semibold text-gray-900 text-sm truncate">{player.name}</p>
-          <p className="text-xs text-gray-500">
+          <p className="font-semibold text-slate-100 text-sm truncate">{player.name}</p>
+          <p className="text-xs text-slate-500">
             In: <span className="font-medium">${buyIn.toFixed(2)}</span>
             {stack != null && <> · Stack: <span className="font-medium">${stack.toFixed(2)}</span></>}
           </p>
@@ -710,7 +710,7 @@ function PlayerRow({ player, transactions, isOpen, onBuyRebuy, onRemove, onDelet
         {net != null && <CurrencyDisplay amount={net} netMode className="text-sm shrink-0" />}
         {isOpen && (
           <button onClick={onBuyRebuy}
-            className="shrink-0 bg-green-50 text-green-700 rounded-xl px-3 py-1.5 text-xs font-semibold active:bg-green-100">
+            className="shrink-0 bg-emerald-900/30 text-emerald-400 rounded-xl px-3 py-1.5 text-xs font-semibold active:bg-emerald-900/50">
             {buyIn === 0 ? 'Buy-in' : '+ Rebuy'}
           </button>
         )}
@@ -720,7 +720,7 @@ function PlayerRow({ player, transactions, isOpen, onBuyRebuy, onRemove, onDelet
       {transactions.length > 0 && (
         <>
           <button onClick={() => setExpanded((v) => !v)}
-            className="w-full flex items-center gap-1 px-3 pb-2.5 text-xs text-gray-400 active:text-gray-600">
+            className="w-full flex items-center gap-1 px-3 pb-2.5 text-xs text-slate-500 active:text-slate-300">
             <svg className={`w-3.5 h-3.5 transition-transform ${expanded ? 'rotate-90' : ''}`}
               fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
@@ -728,17 +728,17 @@ function PlayerRow({ player, transactions, isOpen, onBuyRebuy, onRemove, onDelet
             {transactions.length} transaction{transactions.length !== 1 ? 's' : ''}
           </button>
           {expanded && (
-            <div className="border-t border-gray-50 px-3 pb-3 pt-2 space-y-1.5">
+            <div className="border-t border-slate-700 px-3 pb-3 pt-2 space-y-1.5">
               {transactions.map((tx) => (
                 <div key={tx.id} className="flex items-center gap-2">
-                  <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${tx.type==='buy' ? 'bg-blue-50 text-blue-600' : 'bg-orange-50 text-orange-600'}`}>
+                  <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${tx.type==='buy' ? 'bg-blue-900/30 text-blue-400' : 'bg-orange-900/30 text-orange-400'}`}>
                     {tx.type === 'buy' ? 'Buy-in' : 'Rebuy'}
                   </span>
-                  <span className="text-sm font-semibold text-gray-900 flex-1">${parseFloat(tx.amount).toFixed(2)}</span>
-                  <span className="text-xs text-gray-400">{format(new Date(tx.created_at), 'h:mm a')}</span>
+                  <span className="text-sm font-semibold text-slate-100 flex-1">${parseFloat(tx.amount).toFixed(2)}</span>
+                  <span className="text-xs text-slate-500">{format(new Date(tx.created_at), 'h:mm a')}</span>
                   {isOpen && (
                     <button onClick={() => onDeleteTx(tx.id)}
-                      className="text-gray-300 active:text-red-500 p-1">
+                      className="text-slate-600 active:text-red-400 p-1">
                       <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                       </svg>
@@ -753,8 +753,8 @@ function PlayerRow({ player, transactions, isOpen, onBuyRebuy, onRemove, onDelet
 
       {/* Remove player (no transactions) */}
       {isOpen && transactions.length === 0 && (
-        <div className="border-t border-gray-50 px-3 py-2">
-          <button onClick={onRemove} className="text-xs text-red-400 active:text-red-600">
+        <div className="border-t border-slate-700 px-3 py-2">
+          <button onClick={onRemove} className="text-xs text-red-400 active:text-red-300">
             Remove from game
           </button>
         </div>
@@ -774,7 +774,7 @@ function StacksBalanceIndicator({ players, stacks, totalPot }) {
   const diff = entered - totalPot
   const ok   = Math.abs(diff) < 0.01
   return (
-    <div className={`text-xs text-center py-1.5 rounded-lg font-medium ${ok ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-600'}`}>
+    <div className={`text-xs text-center py-1.5 rounded-lg font-medium ${ok ? 'bg-emerald-900/30 text-emerald-400' : 'bg-red-900/30 text-red-400'}`}>
       {ok ? `✓ Stacks balance ($${entered.toFixed(2)})` : `Entered $${entered.toFixed(2)} · Pot $${totalPot.toFixed(2)} · Δ $${Math.abs(diff).toFixed(2)}`}
     </div>
   )
@@ -784,8 +784,8 @@ function StacksBalanceIndicator({ players, stacks, totalPot }) {
 function Row({ label, value }) {
   return (
     <div className="flex justify-between text-sm">
-      <span className="text-gray-500">{label}</span>
-      <span className="font-medium text-gray-900">{value}</span>
+      <span className="text-slate-400">{label}</span>
+      <span className="font-medium text-slate-100">{value}</span>
     </div>
   )
 }

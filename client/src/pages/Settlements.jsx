@@ -45,9 +45,9 @@ export default function Settlements() {
 
   return (
     <>
-      <div className="sticky top-14 z-10 bg-gray-50/95 backdrop-blur-sm border-b border-gray-100">
+      <div className="sticky top-14 z-10 bg-slate-900/95 backdrop-blur-sm border-b border-slate-700">
         <div className="px-4 pt-4 pb-0 flex items-center">
-          <h1 className="text-xl font-bold text-gray-900 flex-1">Settlements</h1>
+          <h1 className="text-xl font-bold text-slate-100 flex-1">Settlements</h1>
         </div>
         {/* Tabs */}
         <div className="flex px-4 mt-2">
@@ -55,8 +55,8 @@ export default function Settlements() {
             <button key={val} onClick={() => setActiveTab(val)}
               className={`flex-1 py-2.5 text-sm font-medium border-b-2 transition-colors ${
                 activeTab === val
-                  ? 'border-green-600 text-green-600'
-                  : 'border-transparent text-gray-400'
+                  ? 'border-emerald-500 text-emerald-400'
+                  : 'border-transparent text-slate-500'
               }`}>
               {label}
             </button>
@@ -154,14 +154,14 @@ function CalculateTab() {
     <div className="px-4 pt-4 pb-6 space-y-4">
       {/* ── Period selector ─────────────────── */}
       <section className="card space-y-3">
-        <h2 className="font-semibold text-gray-900 text-sm">Select Period</h2>
+        <h2 className="font-semibold text-slate-100 text-sm">Select Period</h2>
         <div className="flex flex-wrap gap-2">
           {PRESETS.map((p, i) => (
             <button key={i} onClick={() => setSelectedPreset(i)}
               className={`px-3 py-1.5 rounded-xl text-sm font-medium border transition-colors ${
                 selectedPreset === i
-                  ? 'bg-green-600 text-white border-green-600'
-                  : 'bg-white text-gray-600 border-gray-200'
+                  ? 'bg-emerald-600 text-white border-emerald-600'
+                  : 'bg-slate-700 text-slate-300 border-slate-600'
               }`}>
               {p.label}
             </button>
@@ -231,9 +231,9 @@ function CalculateTab() {
               )}
 
               {result.transactions.length === 0 && result.games.length > 0 && (
-                <div className="card bg-green-50 border-green-200 text-center py-4">
-                  <p className="text-sm font-semibold text-green-800">Everyone is even!</p>
-                  <p className="text-xs text-green-600 mt-1">No payments needed for this period.</p>
+                <div className="card bg-emerald-900/20 border-emerald-700/50 text-center py-4">
+                  <p className="text-sm font-semibold text-emerald-300">Everyone is even!</p>
+                  <p className="text-xs text-emerald-500 mt-1">No payments needed for this period.</p>
                   <button className="mt-3 btn-primary py-2 px-5 text-sm"
                     onClick={() => setSettleConfirm(true)}>
                     Mark Games as Settled
@@ -265,20 +265,20 @@ function CalculateTab() {
 function GamesSection({ games, checkedGames, onToggle }) {
   return (
     <section>
-      <h2 className="font-semibold text-gray-900 text-sm mb-2">
+      <h2 className="font-semibold text-slate-100 text-sm mb-2">
         Games Included
-        <span className="ml-2 text-gray-400 font-normal">
+        <span className="ml-2 text-slate-500 font-normal">
           {checkedGames.size} of {games.length} selected
         </span>
       </h2>
-      <div className="card py-0 divide-y divide-gray-50">
+      <div className="card py-0 divide-y divide-slate-700">
         {games.map((g) => {
           const checked = checkedGames.has(g.game_id)
           return (
             <button key={g.game_id} onClick={() => onToggle(g.game_id)}
-              className="w-full flex items-center gap-3 px-4 py-3 text-left active:bg-gray-50">
+              className="w-full flex items-center gap-3 px-4 py-3 text-left active:bg-slate-700/50">
               <div className={`w-5 h-5 rounded border-2 flex items-center justify-center shrink-0 transition-colors ${
-                checked ? 'bg-green-600 border-green-600' : 'border-gray-300'}`}>
+                checked ? 'bg-emerald-600 border-emerald-600' : 'border-slate-600'}`}>
                 {checked && (
                   <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
                     <path fillRule="evenodd"
@@ -288,8 +288,8 @@ function GamesSection({ games, checkedGames, onToggle }) {
                 )}
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-gray-900">{g.host_name}'s Game</p>
-                <p className="text-xs text-gray-400">
+                <p className="text-sm font-medium text-slate-100">{g.host_name}'s Game</p>
+                <p className="text-xs text-slate-500">
                   {format(new Date(g.game_date), 'MMM d, yyyy')}
                 </p>
               </div>
@@ -309,8 +309,8 @@ function PlayerSummarySection({ summary }) {
 
   return (
     <section>
-      <h2 className="font-semibold text-gray-900 text-sm mb-2">Player Totals</h2>
-      <div className="card py-0 divide-y divide-gray-50">
+      <h2 className="font-semibold text-slate-100 text-sm mb-2">Player Totals</h2>
+      <div className="card py-0 divide-y divide-slate-700">
         {sorted.map((p) => (
           <PlayerSummaryRow key={p.player_id} player={p} />
         ))}
@@ -326,27 +326,27 @@ function PlayerSummaryRow({ player }) {
   return (
     <div>
       <button onClick={() => setExpanded((v) => !v)}
-        className="w-full flex items-center gap-3 px-4 py-3 text-left active:bg-gray-50">
+        className="w-full flex items-center gap-3 px-4 py-3 text-left active:bg-slate-700/50">
         <div className={`w-8 h-8 rounded-full font-bold text-xs flex items-center justify-center shrink-0 uppercase
-          ${net > 0 ? 'bg-green-100 text-green-700' : net < 0 ? 'bg-red-100 text-red-600' : 'bg-gray-100 text-gray-500'}`}>
+          ${net > 0 ? 'bg-emerald-900/40 text-emerald-400' : net < 0 ? 'bg-red-900/40 text-red-400' : 'bg-slate-700 text-slate-400'}`}>
           {player.player_name.charAt(0)}
         </div>
         <div className="flex-1 min-w-0">
-          <p className="text-sm font-medium text-gray-900">{player.player_name}</p>
-          <p className="text-xs text-gray-400">{player.games.length} game{player.games.length !== 1 ? 's' : ''}</p>
+          <p className="text-sm font-medium text-slate-100">{player.player_name}</p>
+          <p className="text-xs text-slate-500">{player.games.length} game{player.games.length !== 1 ? 's' : ''}</p>
         </div>
         <CurrencyDisplay amount={net} netMode className="text-sm" />
-        <svg className={`w-4 h-4 text-gray-300 transition-transform ${expanded ? 'rotate-90' : ''}`}
+        <svg className={`w-4 h-4 text-slate-600 transition-transform ${expanded ? 'rotate-90' : ''}`}
           fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
         </svg>
       </button>
 
       {expanded && (
-        <div className="bg-gray-50 px-4 py-2 space-y-1.5 border-t border-gray-100">
+        <div className="bg-slate-700/40 px-4 py-2 space-y-1.5 border-t border-slate-700">
           {player.games.map((g) => (
             <div key={g.game_id} className="flex justify-between text-xs">
-              <span className="text-gray-500">{format(new Date(g.game_date), 'MMM d, yyyy')}</span>
+              <span className="text-slate-500">{format(new Date(g.game_date), 'MMM d, yyyy')}</span>
               <CurrencyDisplay amount={g.net_result} netMode className="text-xs" />
             </div>
           ))}
@@ -364,9 +364,9 @@ function PaymentInstructionsSection({ transactions }) {
 
   return (
     <section>
-      <h2 className="font-semibold text-gray-900 text-sm mb-2">
+      <h2 className="font-semibold text-slate-100 text-sm mb-2">
         Payment Instructions
-        <span className="ml-2 text-xs font-normal text-gray-400">
+        <span className="ml-2 text-xs font-normal text-slate-500">
           {transactions.length} transfer{transactions.length !== 1 ? 's' : ''}
         </span>
       </h2>
@@ -383,11 +383,11 @@ function PaymentCard({ tx }) {
   const [expanded, setExpanded] = useState(false)
 
   const paymentMethods = [
-    tx.to_venmo  && { label: 'Venmo',    value: tx.to_venmo,  color: 'text-blue-600',   bg: 'bg-blue-50' },
-    tx.to_cashapp && { label: 'Cash App', value: tx.to_cashapp, color: 'text-green-600', bg: 'bg-green-50' },
-    tx.to_zelle  && { label: 'Zelle',    value: tx.to_zelle,  color: 'text-purple-600', bg: 'bg-purple-50' },
-    tx.to_paypal && { label: 'PayPal',   value: tx.to_paypal, color: 'text-sky-600',    bg: 'bg-sky-50' },
-    tx.to_other  && { label: 'Other',    value: tx.to_other,  color: 'text-gray-600',   bg: 'bg-gray-50' },
+    tx.to_venmo   && { label: 'Venmo',    value: tx.to_venmo,   color: 'text-blue-400',    bg: 'bg-blue-900/30' },
+    tx.to_cashapp && { label: 'Cash App', value: tx.to_cashapp, color: 'text-emerald-400', bg: 'bg-emerald-900/30' },
+    tx.to_zelle   && { label: 'Zelle',    value: tx.to_zelle,   color: 'text-purple-400',  bg: 'bg-purple-900/30' },
+    tx.to_paypal  && { label: 'PayPal',   value: tx.to_paypal,  color: 'text-sky-400',     bg: 'bg-sky-900/30' },
+    tx.to_other   && { label: 'Other',    value: tx.to_other,   color: 'text-slate-300',   bg: 'bg-slate-700' },
   ].filter(Boolean)
 
   return (
@@ -395,31 +395,31 @@ function PaymentCard({ tx }) {
       {/* Main row */}
       <div className="px-4 py-3 flex items-center gap-3">
         {/* From avatar */}
-        <div className="w-8 h-8 rounded-full bg-red-100 text-red-700 font-bold text-xs
+        <div className="w-8 h-8 rounded-full bg-red-900/40 text-red-400 font-bold text-xs
                         flex items-center justify-center shrink-0 uppercase">
           {tx.from_name.charAt(0)}
         </div>
 
         <div className="flex-1 min-w-0">
-          <p className="text-sm font-semibold text-gray-900">
-            <span className="text-red-600">{tx.from_name}</span>
-            <span className="text-gray-400 font-normal mx-1.5">pays</span>
-            <span className="text-green-600">{tx.to_name}</span>
+          <p className="text-sm font-semibold text-slate-100">
+            <span className="text-red-400">{tx.from_name}</span>
+            <span className="text-slate-500 font-normal mx-1.5">pays</span>
+            <span className="text-emerald-400">{tx.to_name}</span>
           </p>
           {paymentMethods.length > 0 && (
-            <p className="text-xs text-gray-400">via {paymentMethods.map(m=>m.label).join(' · ')}</p>
+            <p className="text-xs text-slate-500">via {paymentMethods.map(m=>m.label).join(' · ')}</p>
           )}
         </div>
 
         {/* Amount */}
         <div className="text-right shrink-0">
-          <p className="text-lg font-bold text-gray-900">${tx.amount.toFixed(2)}</p>
+          <p className="text-lg font-bold text-slate-100">${tx.amount.toFixed(2)}</p>
         </div>
 
         {/* Expand for payment details */}
         {paymentMethods.length > 0 && (
           <button onClick={() => setExpanded((v) => !v)}
-            className="text-gray-300 active:text-gray-600 p-1 shrink-0">
+            className="text-slate-600 active:text-slate-300 p-1 shrink-0">
             <svg className={`w-4 h-4 transition-transform ${expanded ? 'rotate-90' : ''}`}
               fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
@@ -430,12 +430,12 @@ function PaymentCard({ tx }) {
 
       {/* Payment details */}
       {expanded && paymentMethods.length > 0 && (
-        <div className="border-t border-gray-50 px-4 py-3 space-y-2">
-          <p className="text-xs font-medium text-gray-500">Send to {tx.to_name} via:</p>
+        <div className="border-t border-slate-700 px-4 py-3 space-y-2">
+          <p className="text-xs font-medium text-slate-500">Send to {tx.to_name} via:</p>
           {paymentMethods.map((m) => (
             <div key={m.label} className={`flex items-center gap-2 px-3 py-2 rounded-xl ${m.bg}`}>
               <span className={`text-xs font-semibold ${m.color} w-16 shrink-0`}>{m.label}</span>
-              <span className="text-sm font-medium text-gray-900 flex-1 break-all">{m.value}</span>
+              <span className="text-sm font-medium text-slate-100 flex-1 break-all">{m.value}</span>
               <CopyButton text={m.value} />
             </div>
           ))}
@@ -458,7 +458,7 @@ function CopyButton({ text }) {
   }
   return (
     <button onClick={handleCopy}
-      className="text-xs text-gray-400 active:text-gray-600 shrink-0 px-2 py-1 rounded-lg active:bg-white/60">
+      className="text-xs text-slate-500 active:text-slate-300 shrink-0 px-2 py-1 rounded-lg active:bg-slate-600/60">
       {copied ? '✓' : 'Copy'}
     </button>
   )
@@ -497,22 +497,22 @@ function HistoryTab() {
     <div className="px-4 pt-4 pb-6 space-y-4">
       {Object.entries(groups).map(([month, items]) => (
         <section key={month}>
-          <h2 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">{month}</h2>
-          <div className="card py-0 divide-y divide-gray-50">
+          <h2 className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">{month}</h2>
+          <div className="card py-0 divide-y divide-slate-700">
             {items.map((s) => (
               <div key={s.id} className="flex items-center gap-3 px-4 py-3">
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-gray-900">
-                    <span className="text-red-600">{s.from_name}</span>
-                    <span className="text-gray-400 mx-1">→</span>
-                    <span className="text-green-600">{s.to_name}</span>
+                  <p className="text-sm font-medium text-slate-100">
+                    <span className="text-red-400">{s.from_name}</span>
+                    <span className="text-slate-600 mx-1">→</span>
+                    <span className="text-emerald-400">{s.to_name}</span>
                   </p>
-                  <p className="text-xs text-gray-400">
+                  <p className="text-xs text-slate-500">
                     {format(new Date(s.created_at), 'MMM d, yyyy')}
                     {s.game_ids?.length > 0 && ` · ${s.game_ids.length} game${s.game_ids.length !== 1 ? 's' : ''}`}
                   </p>
                 </div>
-                <span className="text-sm font-bold text-gray-900 shrink-0">
+                <span className="text-sm font-bold text-slate-100 shrink-0">
                   ${parseFloat(s.amount).toFixed(2)}
                 </span>
                 <span className="badge-gray">Settled</span>

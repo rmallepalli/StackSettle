@@ -26,15 +26,15 @@ export default function Modal({ open, onClose, title, children, footer }) {
       />
 
       {/* Sheet */}
-      <div className="relative bg-white w-full sm:max-w-lg sm:rounded-2xl rounded-t-2xl shadow-2xl flex flex-col max-h-[90vh]">
+      <div className="relative bg-slate-800 w-full sm:max-w-lg sm:rounded-2xl rounded-t-2xl shadow-2xl flex flex-col max-h-[90vh]">
         {/* Header */}
-        <div className="flex items-center justify-between px-4 py-4 border-b border-gray-100 shrink-0">
+        <div className="flex items-center justify-between px-4 py-4 border-b border-slate-700 shrink-0">
           {/* Drag handle on mobile */}
-          <div className="absolute top-2 left-1/2 -translate-x-1/2 w-10 h-1 bg-gray-200 rounded-full sm:hidden" />
-          <h2 className="text-base font-semibold text-gray-900">{title}</h2>
+          <div className="absolute top-2 left-1/2 -translate-x-1/2 w-10 h-1 bg-slate-600 rounded-full sm:hidden" />
+          <h2 className="text-base font-semibold text-slate-100">{title}</h2>
           <button
             onClick={onClose}
-            className="text-gray-400 active:text-gray-600 p-1 -mr-1"
+            className="text-slate-500 active:text-slate-300 p-1 -mr-1"
             aria-label="Close"
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -50,7 +50,7 @@ export default function Modal({ open, onClose, title, children, footer }) {
 
         {/* Optional sticky footer */}
         {footer && (
-          <div className="border-t border-gray-100 px-4 py-3 shrink-0 safe-area-bottom">
+          <div className="border-t border-slate-700 px-4 py-3 shrink-0 safe-area-bottom">
             {footer}
           </div>
         )}

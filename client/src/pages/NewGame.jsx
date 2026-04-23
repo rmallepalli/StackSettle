@@ -194,19 +194,19 @@ export default function NewGame() {
   // ── Render ─────────────────────────────────────────────
   return (
     <>
-      <div className="sticky top-14 z-10 bg-gray-50/95 backdrop-blur-sm border-b border-gray-100 px-4 py-3 flex items-center gap-3">
-        <button onClick={handleDiscard} className="text-gray-500 active:text-gray-700 p-1 -ml-1">
+      <div className="sticky top-14 z-10 bg-slate-900/95 backdrop-blur-sm border-b border-slate-700 px-4 py-3 flex items-center gap-3">
+        <button onClick={handleDiscard} className="text-slate-500 active:text-slate-300 p-1 -ml-1">
           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
           </svg>
         </button>
         <div className="flex-1 min-w-0">
-          <h1 className="text-lg font-bold text-gray-900">New Game</h1>
+          <h1 className="text-lg font-bold text-slate-100">New Game</h1>
           {draft && !draftSaved && (
-            <p className="text-xs text-gray-400">Draft restored</p>
+            <p className="text-xs text-slate-500">Draft restored</p>
           )}
           {draftSaved && (
-            <p className="text-xs text-green-600">Draft saved</p>
+            <p className="text-xs text-emerald-400">Draft saved</p>
           )}
         </div>
         <button
@@ -221,7 +221,7 @@ export default function NewGame() {
       <div className="px-4 pt-4 pb-6 space-y-5">
         {/* ── Game details ─────────────────────── */}
         <section className="card space-y-3">
-          <h2 className="font-semibold text-gray-900 text-sm">Game Details</h2>
+          <h2 className="font-semibold text-slate-100 text-sm">Game Details</h2>
           <div>
             <label className="label">Host Name <span className="text-red-500">*</span></label>
             <input
@@ -242,7 +242,7 @@ export default function NewGame() {
             />
           </div>
           <div>
-            <label className="label">Notes <span className="text-gray-400 font-normal">(optional)</span></label>
+            <label className="label">Notes <span className="text-slate-500 font-normal">(optional)</span></label>
             <textarea
               className="input resize-none"
               rows={2}
@@ -256,14 +256,14 @@ export default function NewGame() {
         {/* ── Player selection ─────────────────── */}
         <section>
           <div className="flex items-center justify-between mb-3">
-            <h2 className="font-semibold text-gray-900 text-sm">
+            <h2 className="font-semibold text-slate-100 text-sm">
               Players
               {selectedCount > 0 && (
-                <span className="ml-2 text-green-600">{selectedCount} selected</span>
+                <span className="ml-2 text-emerald-400">{selectedCount} selected</span>
               )}
             </h2>
             <button
-              className="text-sm text-green-600 font-medium active:text-green-800"
+              className="text-sm text-emerald-400 font-medium active:text-emerald-300"
               onClick={() => { setNewPlayerForm(EMPTY_NEW_PLAYER); setShowNewPlayer(true) }}
             >
               + New Player
@@ -272,7 +272,7 @@ export default function NewGame() {
 
           {/* Search */}
           <div className="relative mb-3">
-            <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400"
+            <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500"
               fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
                 d="M21 21l-4.35-4.35M17 11A6 6 0 115 11a6 6 0 0112 0z" />
@@ -309,10 +309,10 @@ export default function NewGame() {
 
           {/* Existing players */}
           {filteredExisting.length === 0 && !playersLoading && !pendingPlayers.length && (
-            <p className="text-sm text-gray-400 text-center py-6">
+            <p className="text-sm text-slate-500 text-center py-6">
               No players found.{' '}
               <button
-                className="text-green-600 font-medium"
+                className="text-emerald-400 font-medium"
                 onClick={() => setShowNewPlayer(true)}
               >
                 Add one?
@@ -364,15 +364,15 @@ function PlayerRow({ id, name, sub, checked, onToggle, buyIn, onBuyIn, isNew, on
     <div
       className={`flex items-center gap-3 px-3 py-2.5 rounded-xl border transition-colors ${
         checked
-          ? 'bg-green-50 border-green-200'
-          : 'bg-white border-gray-100'
+          ? 'bg-emerald-900/20 border-emerald-700/50'
+          : 'bg-slate-800 border-slate-700'
       }`}
     >
       {/* Checkbox */}
       <button
         onClick={onToggle}
         className={`w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 transition-colors ${
-          checked ? 'bg-green-600 border-green-600' : 'border-gray-300'
+          checked ? 'bg-emerald-600 border-emerald-600' : 'border-slate-600'
         }`}
       >
         {checked && (
@@ -386,24 +386,24 @@ function PlayerRow({ id, name, sub, checked, onToggle, buyIn, onBuyIn, isNew, on
 
       {/* Name */}
       <div className="flex-1 min-w-0" onClick={onToggle}>
-        <p className="text-sm font-medium text-gray-900 truncate">
+        <p className="text-sm font-medium text-slate-100 truncate">
           {name}
-          {isNew && <span className="ml-1.5 text-xs text-green-600 font-normal">new</span>}
+          {isNew && <span className="ml-1.5 text-xs text-emerald-400 font-normal">new</span>}
         </p>
-        {sub && <p className="text-xs text-gray-400 truncate">{sub}</p>}
+        {sub && <p className="text-xs text-slate-500 truncate">{sub}</p>}
       </div>
 
       {/* Buy-in input (only when selected) */}
       {checked && (
         <div className="flex items-center gap-1 shrink-0">
-          <span className="text-sm text-gray-400">$</span>
+          <span className="text-sm text-slate-500">$</span>
           <input
             type="number"
             inputMode="decimal"
             min="0"
             step="5"
-            className="w-20 border border-gray-200 rounded-lg px-2 py-1 text-right
-                       focus:outline-none focus:ring-2 focus:ring-green-500"
+            className="w-20 border border-slate-600 rounded-lg px-2 py-1 text-right bg-slate-700 text-slate-100
+                       focus:outline-none focus:ring-2 focus:ring-emerald-500"
             placeholder="Buy-in"
             value={buyIn}
             onChange={(e) => onBuyIn(e.target.value)}
@@ -416,7 +416,7 @@ function PlayerRow({ id, name, sub, checked, onToggle, buyIn, onBuyIn, isNew, on
       {isNew && (
         <button
           onClick={(e) => { e.stopPropagation(); onRemove() }}
-          className="text-gray-300 active:text-red-500 p-1"
+          className="text-slate-600 active:text-red-400 p-1"
         >
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />

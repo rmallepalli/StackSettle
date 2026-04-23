@@ -29,28 +29,28 @@ export default function PlayerForm({ data, onChange }) {
 
       {/* Payment methods */}
       <div className="pt-1">
-        <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">
+        <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-3">
           Payment Methods
         </p>
         <div className="space-y-3">
           <div className="flex items-center gap-3">
-            <span className="w-20 text-xs text-gray-500 font-medium shrink-0">Venmo</span>
+            <span className="w-20 text-xs text-slate-500 font-medium shrink-0">Venmo</span>
             <input className="input" placeholder="@username" {...field('venmo_handle')} />
           </div>
           <div className="flex items-center gap-3">
-            <span className="w-20 text-xs text-gray-500 font-medium shrink-0">Zelle</span>
+            <span className="w-20 text-xs text-slate-500 font-medium shrink-0">Zelle</span>
             <input className="input" placeholder="Phone or email" {...field('zelle_contact')} />
           </div>
           <div className="flex items-center gap-3">
-            <span className="w-20 text-xs text-gray-500 font-medium shrink-0">PayPal</span>
+            <span className="w-20 text-xs text-slate-500 font-medium shrink-0">PayPal</span>
             <input className="input" placeholder="paypal.me/username" {...field('paypal_handle')} />
           </div>
           <div className="flex items-center gap-3">
-            <span className="w-20 text-xs text-gray-500 font-medium shrink-0">Cash App</span>
+            <span className="w-20 text-xs text-slate-500 font-medium shrink-0">Cash App</span>
             <input className="input" placeholder="$cashtag" {...field('cashapp_tag')} />
           </div>
           <div className="flex items-center gap-3">
-            <span className="w-20 text-xs text-gray-500 font-medium shrink-0">Other</span>
+            <span className="w-20 text-xs text-slate-500 font-medium shrink-0">Other</span>
             <input className="input" placeholder="e.g. Venmo @other or check" {...field('other_payment')} />
           </div>
         </div>

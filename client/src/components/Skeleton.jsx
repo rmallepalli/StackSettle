@@ -1,5 +1,5 @@
 function Bone({ className = '' }) {
-  return <div className={`animate-pulse bg-gray-200 rounded-lg ${className}`} />
+  return <div className={`animate-pulse bg-slate-700 rounded-lg ${className}`} />
 }
 
 export function GameCardSkeleton() {
@@ -12,7 +12,7 @@ export function GameCardSkeleton() {
         </div>
         <Bone className="h-5 w-5 rounded-full" />
       </div>
-      <div className="flex gap-4 pt-2 border-t border-gray-50">
+      <div className="flex gap-4 pt-2 border-t border-slate-700">
         <div className="space-y-1.5"><Bone className="h-2.5 w-10" /><Bone className="h-4 w-6" /></div>
         <div className="space-y-1.5"><Bone className="h-2.5 w-14" /><Bone className="h-4 w-16" /></div>
       </div>

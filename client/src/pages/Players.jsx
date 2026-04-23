@@ -95,9 +95,9 @@ export default function Players() {
   return (
     <>
       {/* ── Header ─────────────────────────────────── */}
-      <div className="sticky top-14 z-10 bg-gray-50/95 backdrop-blur-sm border-b border-gray-100">
+      <div className="sticky top-14 z-10 bg-slate-900/95 backdrop-blur-sm border-b border-slate-700">
         <div className="px-4 pt-4 pb-3 flex items-center gap-3">
-          <h1 className="text-xl font-bold text-gray-900 flex-1">Players</h1>
+          <h1 className="text-xl font-bold text-slate-100 flex-1">Players</h1>
           <button className="btn-primary text-sm py-2 px-4" onClick={openAdd}>
             + Add
           </button>
@@ -105,7 +105,7 @@ export default function Players() {
         {/* Search */}
         <div className="px-4 pb-3">
           <div className="relative">
-            <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400"
+            <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500"
               fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
                 d="M21 21l-4.35-4.35M17 11A6 6 0 115 11a6 6 0 0112 0z" />
@@ -147,7 +147,7 @@ export default function Players() {
         ))}
 
         {!loading && players?.length > 0 && (
-          <p className="text-center text-xs text-gray-400 pt-2">
+          <p className="text-center text-xs text-slate-500 pt-2">
             {filtered.length} of {players.length} player{players.length !== 1 ? 's' : ''}
           </p>
         )}
@@ -206,16 +206,16 @@ function PlayerCard({ player, onEdit, onDelete }) {
   return (
     <div className="card flex items-start gap-3 py-3">
       {/* Avatar */}
-      <div className="w-10 h-10 rounded-full bg-green-100 text-green-700 font-bold text-sm
+      <div className="w-10 h-10 rounded-full bg-emerald-900/40 text-emerald-400 font-bold text-sm
                       flex items-center justify-center shrink-0 uppercase">
         {player.name.charAt(0)}
       </div>
 
       {/* Info */}
       <div className="flex-1 min-w-0">
-        <p className="font-semibold text-gray-900 truncate">{player.name}</p>
+        <p className="font-semibold text-slate-100 truncate">{player.name}</p>
         {(player.phone || player.email) && (
-          <p className="text-xs text-gray-500 truncate mt-0.5">
+          <p className="text-xs text-slate-500 truncate mt-0.5">
             {[player.phone, player.email].filter(Boolean).join(' · ')}
           </p>
         )}
@@ -228,7 +228,7 @@ function PlayerCard({ player, onEdit, onDelete }) {
       <div className="flex items-center gap-1 shrink-0">
         <button
           onClick={onEdit}
-          className="p-2 text-gray-400 active:text-gray-700 rounded-lg active:bg-gray-100"
+          className="p-2 text-slate-500 active:text-slate-200 rounded-lg active:bg-slate-700"
           aria-label="Edit"
         >
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -238,7 +238,7 @@ function PlayerCard({ player, onEdit, onDelete }) {
         </button>
         <button
           onClick={onDelete}
-          className="p-2 text-gray-400 active:text-red-600 rounded-lg active:bg-red-50"
+          className="p-2 text-slate-500 active:text-red-400 rounded-lg active:bg-red-900/20"
           aria-label="Delete"
         >
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

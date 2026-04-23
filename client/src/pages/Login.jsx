@@ -30,16 +30,16 @@ export default function Login() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50 p-6 sm:bg-gray-200">
+    <div className="min-h-screen flex flex-col items-center justify-center bg-slate-900 p-6 sm:bg-slate-950">
       <div className="w-full max-w-sm">
 
         {/* Logo */}
         <div className="text-center mb-10">
-          <div className="w-20 h-20 bg-green-600 rounded-3xl flex items-center justify-center mx-auto mb-4 shadow-lg">
+          <div className="w-20 h-20 bg-emerald-600 rounded-3xl flex items-center justify-center mx-auto mb-4 shadow-lg shadow-emerald-900/50">
             <span className="text-white text-4xl leading-none">♠</span>
           </div>
-          <h1 className="text-3xl font-bold text-gray-900 tracking-tight">StackSettle</h1>
-          <p className="text-gray-500 mt-1 text-sm">Home poker settlement</p>
+          <h1 className="text-3xl font-bold text-slate-100 tracking-tight">StackSettle</h1>
+          <p className="text-slate-500 mt-1 text-sm">Home poker settlement</p>
         </div>
 
         {/* Card */}
@@ -70,7 +70,7 @@ export default function Login() {
           </form>
         </div>
 
-        <p className="text-center text-xs text-gray-400 mt-6">
+        <p className="text-center text-xs text-slate-600 mt-6">
           StackSettle · Home Game Tracker
         </p>
       </div>

@@ -45,17 +45,17 @@ export default function Games() {
   return (
     <>
       {/* ── Header ───────────────────────────────── */}
-      <div className="sticky top-14 z-10 bg-gray-50/95 backdrop-blur-sm border-b border-gray-100">
+      <div className="sticky top-14 z-10 bg-slate-900/95 backdrop-blur-sm border-b border-slate-700">
         <div className="px-4 pt-4 pb-3 flex items-center gap-2">
-          <h1 className="text-xl font-bold text-gray-900 flex-1">Games</h1>
+          <h1 className="text-xl font-bold text-slate-100 flex-1">Games</h1>
 
           {/* Filter toggle */}
           <button
             onClick={() => setShowFilters((v) => !v)}
             className={`relative p-2 rounded-xl border transition-colors ${
               showFilters || activeFilterCount
-                ? 'border-green-300 bg-green-50 text-green-700'
-                : 'border-gray-200 bg-white text-gray-500'
+                ? 'border-emerald-500/50 bg-emerald-900/20 text-emerald-400'
+                : 'border-slate-700 bg-slate-800 text-slate-400'
             }`}
             aria-label="Filters"
           >
@@ -87,8 +87,8 @@ export default function Games() {
               onClick={() => setStatusFilter(value)}
               className={`shrink-0 px-3 py-1 rounded-full text-sm font-medium transition-colors ${
                 statusFilter === value
-                  ? 'bg-green-600 text-white'
-                  : 'bg-white text-gray-600 border border-gray-200'
+                  ? 'bg-emerald-600 text-white'
+                  : 'bg-slate-800 text-slate-300 border border-slate-700'
               }`}
             >
               {label}
@@ -98,7 +98,7 @@ export default function Games() {
 
         {/* Collapsible advanced filters */}
         {showFilters && (
-          <div className="px-4 pb-4 space-y-3 border-t border-gray-100 pt-3">
+          <div className="px-4 pb-4 space-y-3 border-t border-slate-700 pt-3">
             <div>
               <label className="label">Host name contains</label>
               <input
@@ -159,7 +159,7 @@ export default function Games() {
         ))}
 
         {!loading && games?.length > 0 && (
-          <p className="text-center text-xs text-gray-400 pt-1">
+          <p className="text-center text-xs text-slate-500 pt-1">
             {games.length} game{games.length !== 1 ? 's' : ''}
           </p>
         )}
@@ -169,7 +169,7 @@ export default function Games() {
       <button
         onClick={() => navigate('/games/new')}
         className="fixed bottom-24 right-4 sm:right-[calc(50%-theme(maxWidth.lg)/2+1rem)]
-                   w-14 h-14 bg-green-600 text-white rounded-full shadow-lg
+                   w-14 h-14 bg-emerald-600 text-white rounded-full shadow-lg shadow-emerald-900/50
                    flex items-center justify-center text-2xl
                    active:bg-green-700 transition-colors z-10"
         aria-label="New game"
@@ -188,30 +188,30 @@ function GameCard({ game, onClick }) {
   return (
     <button
       onClick={onClick}
-      className="card w-full text-left active:bg-gray-50 transition-colors"
+      className="card w-full text-left active:bg-slate-700/50 transition-colors"
     >
       <div className="flex items-start justify-between gap-2">
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2 flex-wrap">
-            <span className="font-semibold text-gray-900">{dateStr}</span>
+            <span className="font-semibold text-slate-100">{dateStr}</span>
             <StatusBadge status={game.status} />
           </div>
           {/* Host name displayed prominently below the date */}
           <div className="flex items-center gap-1.5 mt-1">
-            <svg className="w-3.5 h-3.5 text-gray-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-3.5 h-3.5 text-slate-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
                 d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
             </svg>
-            <span className="text-sm font-medium text-gray-700">{game.host_name}</span>
-            <span className="text-xs text-gray-400">hosting</span>
+            <span className="text-sm font-medium text-slate-300">{game.host_name}</span>
+            <span className="text-xs text-slate-500">hosting</span>
           </div>
         </div>
-        <svg className="w-5 h-5 text-gray-300 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <svg className="w-5 h-5 text-slate-600 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
         </svg>
       </div>
 
-      <div className="flex items-center gap-4 mt-3 pt-3 border-t border-gray-50">
+      <div className="flex items-center gap-4 mt-3 pt-3 border-t border-slate-700">
         <Stat label="Host" value={game.host_name} />
         <Stat label="Players" value={game.player_count ?? 0} />
         <Stat label="Total Pot" value={<CurrencyDisplay amount={game.total_pot ?? 0} />} />
@@ -226,8 +226,8 @@ function GameCard({ game, onClick }) {
 function Stat({ label, value }) {
   return (
     <div>
-      <p className="text-xs text-gray-400">{label}</p>
-      <p className="text-sm font-semibold text-gray-900">{value}</p>
+      <p className="text-xs text-slate-500">{label}</p>
+      <p className="text-sm font-semibold text-slate-100">{value}</p>
     </div>
   )
 }
