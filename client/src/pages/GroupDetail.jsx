@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import toast from 'react-hot-toast'
 import {
@@ -25,13 +25,27 @@ export default function GroupDetail() {
   const navigate = useNavigate()
   const { activeGroup, selectGroup, clearGroup } = useGroup()
 
-  const { data: group,   loading: gLoading,  refetch: refetchGroup }   = useFetch(() => getGroup(id),         [id])
-  const { data: members, loading: mLoading,  refetch: refetchMembers } = useFetch(() => getGroupMembers(id),  [id])
-  const { data: allPlayers, loading: pLoading }                         = useFetch(getPlayers)
+  const { data: group,      loading: gLoading,  refetch: refetchGroup }   = useFetch(() => getGroup(id),        [id])
+  const { data: members,    loading: mLoading,  refetch: refetchMembers } = useFetch(() => getGroupMembers(id), [id])
+  const { data: allPlayers, loading: pLoading }                           = useFetch(getPlayers)
 
-  const [editForm,       setEditForm]       = useState(null)       // { name, description }
+  // Inline edit form — kept in sync with loaded group
+  const [editName, setEditName]         = useState('')
+  const [editDesc, setEditDesc]         = useState('')
+  const [nameChanged, setNameChanged]   = useState(false)
+
+  useEffect(() => {
+    if (group) {
+      setEditName(group.name)
+      setEditDesc(group.description || '')
+      setNameChanged(false)
+    }
+  }, [group])
+
+  const isDirty = group && (editName !== group.name || editDesc !== (group.description || ''))
+
   const [showAddModal,   setShowAddModal]   = useState(false)
-  const [addTab,         setAddTab]         = useState('existing') // 'existing' | 'new'
+  const [addTab,         setAddTab]         = useState('existing')
   const [newPlayerForm,  setNewPlayerForm]  = useState(EMPTY_PLAYER)
   const [searchQuery,    setSearchQuery]    = useState('')
   const [deleteConfirm,  setDeleteConfirm]  = useState(false)
@@ -42,9 +56,8 @@ export default function GroupDetail() {
   if (gLoading) return <PageSpinner />
   if (!group) return null
 
-  // Players not yet in this group (for the "add existing" tab)
   const memberIds = new Set((members || []).map((m) => m.id))
-  const availablePlayers = useMemo(() => {
+  const availablePlayers = (() => {
     if (!allPlayers) return []
     const q = searchQuery.trim().toLowerCase()
     return allPlayers
@@ -55,20 +68,16 @@ export default function GroupDetail() {
         p.phone?.toLowerCase().includes(q) ||
         p.email?.toLowerCase().includes(q)
       )
-  }, [allPlayers, memberIds, searchQuery])
+  })()
 
-  // ── Edit group info ───────────────────────────
-  const openEdit = () => setEditForm({ name: group.name, description: group.description || '' })
-
-  const handleSaveEdit = async () => {
-    if (!editForm.name.trim()) return toast.error('Group name is required')
+  // ── Save group info ───────────────────────────
+  const handleSave = async () => {
+    if (!editName.trim()) return toast.error('Group name is required')
     setSaving(true)
     try {
-      const updated = await updateGroup(id, editForm)
+      const updated = await updateGroup(id, { name: editName.trim(), description: editDesc.trim() || null })
       toast.success('Group updated')
-      setEditForm(null)
       refetchGroup()
-      // Refresh activeGroup context if this is the current group
       if (activeGroup?.id === updated.id) selectGroup(updated)
     } catch (e) {
       toast.error(e.response?.data?.error || 'Failed to update group')
@@ -149,40 +158,47 @@ export default function GroupDetail() {
           </svg>
         </button>
         <div className="flex-1 min-w-0">
-          <h1 className="font-bold text-slate-100 truncate">{group.name}</h1>
-          <p className="text-xs text-slate-500">Group Settings</p>
+          <h1 className="font-bold text-slate-100 truncate">Group Settings</h1>
+          <p className="text-xs text-slate-500 truncate">{group.name}</p>
         </div>
-        <button
-          onClick={openEdit}
-          className="text-slate-500 active:text-slate-200 p-1"
-          aria-label="Edit group"
-        >
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-              d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-          </svg>
-        </button>
       </div>
 
       <div className="px-4 pt-4 pb-8 space-y-5">
 
-        {/* Group info card */}
-        <div className="card space-y-1">
-          <div className="flex items-center gap-3">
-            <div className="w-12 h-12 rounded-2xl bg-emerald-900/40 text-emerald-400 font-bold text-xl
-                            flex items-center justify-center shrink-0 uppercase">
-              {group.name.charAt(0)}
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="font-bold text-slate-100 text-lg leading-tight">{group.name}</p>
-              {group.description
-                ? <p className="text-sm text-slate-400 mt-0.5">{group.description}</p>
-                : <p className="text-xs text-slate-600 mt-0.5 italic">No description</p>}
-            </div>
-          </div>
-        </div>
+        {/* ── Edit group info ─────────────────────── */}
+        <section className="card space-y-4">
+          <h2 className="font-semibold text-slate-100 text-sm">Group Info</h2>
 
-        {/* Members section */}
+          <div>
+            <label className="label">Group Name <span className="text-red-500">*</span></label>
+            <input
+              className="input"
+              value={editName}
+              onChange={(e) => setEditName(e.target.value)}
+              placeholder="e.g. Friday Night Poker"
+            />
+          </div>
+
+          <div>
+            <label className="label">Description <span className="text-slate-500 font-normal">(optional)</span></label>
+            <input
+              className="input"
+              value={editDesc}
+              onChange={(e) => setEditDesc(e.target.value)}
+              placeholder="e.g. Office crew, bi-weekly game"
+            />
+          </div>
+
+          <button
+            className="btn-primary w-full py-2.5"
+            onClick={handleSave}
+            disabled={saving || !isDirty}
+          >
+            {saving ? 'Saving…' : 'Save Changes'}
+          </button>
+        </section>
+
+        {/* ── Members ─────────────────────────────── */}
         <section>
           <div className="flex items-center justify-between mb-3">
             <h2 className="font-semibold text-slate-100 text-sm">
@@ -223,49 +239,21 @@ export default function GroupDetail() {
           </div>
         </section>
 
-        {/* Danger zone */}
-        <div className="pt-4 border-t border-slate-700">
+        {/* ── Danger Zone ─────────────────────────── */}
+        <section className="card border-red-900/50 space-y-3">
+          <h2 className="font-semibold text-red-400 text-sm">Danger Zone</h2>
+          <p className="text-xs text-slate-500">
+            Deleting a group is permanent. You can only delete a group that has no games.
+          </p>
           <button
             onClick={() => setDeleteConfirm(true)}
-            className="text-sm text-red-400 active:text-red-300 font-medium"
+            className="w-full py-2.5 rounded-xl border border-red-800/60 text-red-400 text-sm font-medium
+                       bg-red-900/10 active:bg-red-900/30 transition-colors"
           >
             Delete this group
           </button>
-          <p className="text-xs text-slate-600 mt-1">
-            Only possible when all games are settled.
-          </p>
-        </div>
+        </section>
       </div>
-
-      {/* Edit group modal */}
-      {editForm && (
-        <Modal
-          open
-          onClose={() => setEditForm(null)}
-          title="Edit Group"
-          footer={
-            <div className="flex gap-3">
-              <button className="btn-secondary flex-1" onClick={() => setEditForm(null)} disabled={saving}>Cancel</button>
-              <button className="btn-primary flex-1" onClick={handleSaveEdit} disabled={saving}>
-                {saving ? 'Saving…' : 'Save'}
-              </button>
-            </div>
-          }
-        >
-          <div className="space-y-4">
-            <div>
-              <label className="label">Group Name <span className="text-red-500">*</span></label>
-              <input className="input" value={editForm.name}
-                onChange={(e) => setEditForm((f) => ({ ...f, name: e.target.value }))} />
-            </div>
-            <div>
-              <label className="label">Description <span className="text-slate-500 font-normal">(optional)</span></label>
-              <input className="input" value={editForm.description}
-                onChange={(e) => setEditForm((f) => ({ ...f, description: e.target.value }))} />
-            </div>
-          </div>
-        </Modal>
-      )}
 
       {/* Add member modal */}
       <Modal
@@ -283,7 +271,6 @@ export default function GroupDetail() {
           </div>
         ) : null}
       >
-        {/* Tabs */}
         <div className="flex rounded-xl overflow-hidden border border-slate-600 mb-4">
           {[['existing', 'Add Existing'], ['new', 'Create New']].map(([tab, label]) => (
             <button key={tab} onClick={() => setAddTab(tab)}
@@ -345,7 +332,7 @@ export default function GroupDetail() {
       <ConfirmDialog
         open={deleteConfirm}
         title="Delete group?"
-        message="This permanently deletes the group and its membership list. Past game records are preserved. This can't be undone."
+        message="This permanently deletes the group and its membership list. This cannot be undone."
         confirmLabel="Delete"
         danger
         loading={deleting}

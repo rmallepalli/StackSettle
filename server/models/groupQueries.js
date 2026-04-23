@@ -33,11 +33,10 @@ const update = (id, { name, description }) =>
 
 const remove = async (id) => {
   const { rows } = await db.query(
-    `SELECT COUNT(*)::int AS cnt
-     FROM games WHERE group_id = $1 AND status != 'settled'`,
+    `SELECT COUNT(*)::int AS cnt FROM games WHERE group_id = $1`,
     [id]
   )
-  if (rows[0].cnt > 0) throw new Error('Cannot delete group with active or finalized games')
+  if (rows[0].cnt > 0) throw new Error('Cannot delete a group that has games. Remove all games first.')
   return db.query('DELETE FROM game_groups WHERE id = $1 RETURNING id', [id])
 }
 
