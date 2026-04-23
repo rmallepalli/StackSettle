@@ -1,10 +1,14 @@
 const db = require('./db')
 
 // List games with optional filters and total pot per game
-const list = ({ status, hostSearch, dateFrom, dateTo } = {}) => {
+const list = ({ groupId, status, hostSearch, dateFrom, dateTo } = {}) => {
   const conditions = []
   const vals = []
 
+  if (groupId) {
+    vals.push(groupId)
+    conditions.push(`g.group_id = $${vals.length}`)
+  }
   if (status) {
     vals.push(status)
     conditions.push(`g.status = $${vals.length}`)
@@ -69,11 +73,11 @@ const findById = async (id) => {
   }
 }
 
-const create = ({ host_name, game_date, settlement_period, notes }) =>
+const create = ({ group_id, host_name, game_date, settlement_period, notes }) =>
   db.query(
-    `INSERT INTO games (host_name, game_date, settlement_period, notes)
-     VALUES ($1, $2, $3, $4) RETURNING *`,
-    [host_name, game_date || new Date(), settlement_period || 'custom', notes]
+    `INSERT INTO games (group_id, host_name, game_date, settlement_period, notes)
+     VALUES ($1, $2, $3, $4, $5) RETURNING *`,
+    [group_id, host_name, game_date || new Date(), settlement_period || 'custom', notes]
   )
 
 const update = (id, { host_name, game_date, settlement_period, notes }) =>

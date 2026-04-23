@@ -2,8 +2,9 @@ import { useState, useMemo, useEffect, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import toast from 'react-hot-toast'
 import { format } from 'date-fns'
-import { getPlayers } from '../services/players.js'
+import { getGroupMembers } from '../services/groups.js'
 import { createGame, addPlayerToGame, addTransaction } from '../services/games.js'
+import { useGroup } from '../contexts/GroupContext.jsx'
 import useFetch from '../hooks/useFetch.js'
 import Modal from '../components/Modal.jsx'
 import PlayerForm from '../components/PlayerForm.jsx'
@@ -44,7 +45,12 @@ function clearDraft() {
 
 export default function NewGame() {
   const navigate = useNavigate()
-  const { data: allPlayers, loading: playersLoading } = useFetch(getPlayers)
+  const { activeGroup } = useGroup()
+  const groupId = activeGroup?.id
+  const { data: allPlayers, loading: playersLoading } = useFetch(
+    () => getGroupMembers(groupId),
+    [groupId]
+  )
 
   // Restore from draft on mount
   const draft = loadDraft()
@@ -135,7 +141,7 @@ export default function NewGame() {
     setSaving(true)
     try {
       // 1. Create the game
-      const game = await createGame({ host_name: hostName, game_date: gameDate, notes })
+      const game = await createGame({ host_name: hostName, game_date: gameDate, notes, group_id: groupId })
 
       // 2. Add pending players (create in DB), then all players to game
       const resolvedIds = []

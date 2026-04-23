@@ -16,6 +16,7 @@ app.use(express.json())
 // Routes
 app.use('/api/auth', require('./routes/auth'))
 app.use('/api/players', require('./routes/players'))
+app.use('/api/groups', require('./routes/groups'))
 app.use('/api/games', require('./routes/games'))
 app.use('/api/transactions', require('./routes/transactions'))
 app.use('/api/settlements', require('./routes/settlements'))

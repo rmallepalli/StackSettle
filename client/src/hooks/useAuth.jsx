@@ -12,6 +12,7 @@ export function AuthProvider({ children }) {
 
   const logout = () => {
     localStorage.removeItem('ss_token')
+    localStorage.removeItem('ss_active_group')
     setToken(null)
   }
 

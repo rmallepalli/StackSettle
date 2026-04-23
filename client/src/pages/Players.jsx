@@ -1,6 +1,8 @@
 import { useState, useMemo } from 'react'
 import toast from 'react-hot-toast'
-import { getPlayers, createPlayer, updatePlayer, deletePlayer } from '../services/players.js'
+import { getPlayers, updatePlayer } from '../services/players.js'
+import { getGroupMembers, addGroupMember, removeGroupMember } from '../services/groups.js'
+import { useGroup } from '../contexts/GroupContext.jsx'
 import useFetch from '../hooks/useFetch.js'
 import Modal from '../components/Modal.jsx'
 import ConfirmDialog from '../components/ConfirmDialog.jsx'
@@ -17,40 +19,78 @@ const EMPTY_FORM = {
 }
 
 export default function Players() {
-  const { data: players, loading, error, refetch } = useFetch(getPlayers)
-  const [search, setSearch]     = useState('')
-  const [showAdd, setShowAdd]   = useState(false)
-  const [editTarget, setEditTarget] = useState(null)   // player object
-  const [deleteTarget, setDeleteTarget] = useState(null) // player object
-  const [form, setForm]         = useState(EMPTY_FORM)
-  const [saving, setSaving]     = useState(false)
-  const [deleting, setDeleting] = useState(false)
+  const { activeGroup } = useGroup()
+  const groupId = activeGroup?.id
 
-  // Client-side filter (fast, no extra API call)
+  const { data: members, loading, error, refetch } = useFetch(
+    () => getGroupMembers(groupId),
+    [groupId]
+  )
+  const { data: allPlayers } = useFetch(getPlayers)
+
+  const [search,        setSearch]        = useState('')
+  const [showAdd,       setShowAdd]       = useState(false)
+  const [addTab,        setAddTab]        = useState('existing')
+  const [addSearch,     setAddSearch]     = useState('')
+  const [newPlayerForm, setNewPlayerForm] = useState(EMPTY_FORM)
+  const [editTarget,    setEditTarget]    = useState(null)
+  const [removeTarget,  setRemoveTarget]  = useState(null)
+  const [form,          setForm]          = useState(EMPTY_FORM)
+  const [saving,        setSaving]        = useState(false)
+  const [removing,      setRemoving]      = useState(false)
+
+  const memberIds = useMemo(() => new Set((members || []).map((m) => m.id)), [members])
+
   const filtered = useMemo(() => {
-    if (!players) return []
+    if (!members) return []
     const q = search.trim().toLowerCase()
-    if (!q) return players
-    return players.filter(
+    if (!q) return members
+    return members.filter(
       (p) =>
         p.name.toLowerCase().includes(q) ||
         p.phone?.toLowerCase().includes(q) ||
         p.email?.toLowerCase().includes(q)
     )
-  }, [players, search])
+  }, [members, search])
 
-  // --- Add ---
-  const openAdd = () => { setForm(EMPTY_FORM); setShowAdd(true) }
-  const closeAdd = () => setShowAdd(false)
+  const availablePlayers = useMemo(() => {
+    if (!allPlayers) return []
+    const q = addSearch.trim().toLowerCase()
+    return allPlayers
+      .filter((p) => !memberIds.has(p.id))
+      .filter((p) =>
+        !q ||
+        p.name.toLowerCase().includes(q) ||
+        p.phone?.toLowerCase().includes(q) ||
+        p.email?.toLowerCase().includes(q)
+      )
+  }, [allPlayers, memberIds, addSearch])
 
-  const handleAdd = async () => {
-    if (!form.name.trim()) return toast.error('Name is required')
+  // --- Add Existing ---
+  const handleAddExisting = async (player) => {
     setSaving(true)
     try {
-      await createPlayer(form)
-      toast.success(`${form.name} added`)
+      await addGroupMember(groupId, { player_id: player.id })
+      toast.success(`${player.name} added to group`)
+      setAddSearch('')
       refetch()
-      closeAdd()
+    } catch (e) {
+      toast.error(e.response?.data?.error || 'Failed to add member')
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  // --- Add New ---
+  const handleAddNew = async () => {
+    if (!newPlayerForm.name.trim()) return toast.error('Name is required')
+    setSaving(true)
+    try {
+      await addGroupMember(groupId, newPlayerForm)
+      toast.success(`${newPlayerForm.name} added`)
+      setNewPlayerForm(EMPTY_FORM)
+      setShowAdd(false)
+      refetch()
     } catch (e) {
       toast.error(e.response?.data?.error || 'Failed to add player')
     } finally {
@@ -58,7 +98,7 @@ export default function Players() {
     }
   }
 
-  // --- Edit ---
+  // --- Edit (global player record) ---
   const openEdit = (player) => { setForm({ ...player }); setEditTarget(player) }
   const closeEdit = () => setEditTarget(null)
 
@@ -77,19 +117,26 @@ export default function Players() {
     }
   }
 
-  // --- Delete ---
-  const handleDelete = async () => {
-    setDeleting(true)
+  // --- Remove from group ---
+  const handleRemove = async () => {
+    setRemoving(true)
     try {
-      await deletePlayer(deleteTarget.id)
-      toast.success(`${deleteTarget.name} removed`)
+      await removeGroupMember(groupId, removeTarget.id)
+      toast.success(`${removeTarget.name} removed from group`)
       refetch()
-      setDeleteTarget(null)
+      setRemoveTarget(null)
     } catch (e) {
-      toast.error(e.response?.data?.error || 'Failed to delete player')
+      toast.error(e.response?.data?.error || 'Failed to remove member')
     } finally {
-      setDeleting(false)
+      setRemoving(false)
     }
+  }
+
+  const openAddModal = (tab = 'existing') => {
+    setAddTab(tab)
+    setAddSearch('')
+    setNewPlayerForm(EMPTY_FORM)
+    setShowAdd(true)
   }
 
   return (
@@ -98,11 +145,10 @@ export default function Players() {
       <div className="sticky top-14 z-10 bg-slate-900/95 backdrop-blur-sm border-b border-slate-700">
         <div className="px-4 pt-4 pb-3 flex items-center gap-3">
           <h1 className="text-xl font-bold text-slate-100 flex-1">Players</h1>
-          <button className="btn-primary text-sm py-2 px-4" onClick={openAdd}>
+          <button className="btn-primary text-sm py-2 px-4" onClick={() => openAddModal('existing')}>
             + Add
           </button>
         </div>
-        {/* Search */}
         <div className="px-4 pb-3">
           <div className="relative">
             <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500"
@@ -112,7 +158,7 @@ export default function Players() {
             </svg>
             <input
               className="input pl-9 py-2"
-              placeholder="Search by name, phone, or email…"
+              placeholder="Search members…"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
             />
@@ -128,12 +174,16 @@ export default function Players() {
 
         {!loading && !error && filtered.length === 0 && (
           search
-            ? <EmptyState icon="🔍" title="No players match" description={`No results for "${search}"`} />
+            ? <EmptyState icon="🔍" title="No members match" description={`No results for "${search}"`} />
             : <EmptyState
                 icon="👤"
-                title="No players yet"
-                description="Add your regular crew to get started."
-                action={<button className="btn-primary" onClick={openAdd}>Add first player</button>}
+                title="No members yet"
+                description="Add players to this group to get started."
+                action={
+                  <button className="btn-primary" onClick={() => openAddModal('new')}>
+                    Add first player
+                  </button>
+                }
               />
         )}
 
@@ -142,13 +192,13 @@ export default function Players() {
             key={player.id}
             player={player}
             onEdit={() => openEdit(player)}
-            onDelete={() => setDeleteTarget(player)}
+            onRemove={() => setRemoveTarget(player)}
           />
         ))}
 
-        {!loading && players?.length > 0 && (
+        {!loading && members?.length > 0 && (
           <p className="text-center text-xs text-slate-500 pt-2">
-            {filtered.length} of {players.length} player{players.length !== 1 ? 's' : ''}
+            {filtered.length} of {members.length} member{members.length !== 1 ? 's' : ''}
           </p>
         )}
       </div>
@@ -156,18 +206,74 @@ export default function Players() {
       {/* ── Add modal ──────────────────────────────── */}
       <Modal
         open={showAdd}
-        onClose={closeAdd}
-        title="New Player"
-        footer={
+        onClose={() => { setShowAdd(false); setAddSearch(''); setNewPlayerForm(EMPTY_FORM) }}
+        title="Add Member"
+        footer={addTab === 'new' ? (
           <div className="flex gap-3">
-            <button className="btn-secondary flex-1" onClick={closeAdd} disabled={saving}>Cancel</button>
-            <button className="btn-primary flex-1" onClick={handleAdd} disabled={saving}>
-              {saving ? 'Saving…' : 'Add Player'}
+            <button className="btn-secondary flex-1"
+              onClick={() => { setShowAdd(false); setNewPlayerForm(EMPTY_FORM) }}
+              disabled={saving}>Cancel</button>
+            <button className="btn-primary flex-1" onClick={handleAddNew} disabled={saving}>
+              {saving ? 'Adding…' : 'Create & Add'}
             </button>
           </div>
-        }
+        ) : null}
       >
-        <PlayerForm data={form} onChange={setForm} />
+        {/* Tabs */}
+        <div className="flex rounded-xl overflow-hidden border border-slate-600 mb-4">
+          {[['existing', 'Add Existing'], ['new', 'Create New']].map(([tab, label]) => (
+            <button key={tab} onClick={() => setAddTab(tab)}
+              className={`flex-1 py-2.5 text-sm font-medium transition-colors ${
+                addTab === tab ? 'bg-emerald-600 text-white' : 'bg-slate-700 text-slate-300'
+              }`}>
+              {label}
+            </button>
+          ))}
+        </div>
+
+        {addTab === 'existing' && (
+          <div className="space-y-3">
+            <input
+              className="input"
+              placeholder="Search players…"
+              value={addSearch}
+              onChange={(e) => setAddSearch(e.target.value)}
+              autoFocus
+            />
+            {availablePlayers.length === 0 && (
+              <p className="text-sm text-slate-500 text-center py-4">
+                {allPlayers?.length ? 'All players are already members.' : 'No players in the system yet.'}
+              </p>
+            )}
+            <div className="space-y-1 max-h-64 overflow-y-auto -mx-4 px-4">
+              {availablePlayers.map((p) => (
+                <button
+                  key={p.id}
+                  onClick={() => handleAddExisting(p)}
+                  disabled={saving}
+                  className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl active:bg-slate-700 text-left"
+                >
+                  <div className="w-8 h-8 rounded-full bg-emerald-900/40 text-emerald-400 font-bold text-xs
+                                  flex items-center justify-center shrink-0 uppercase">
+                    {p.name.charAt(0)}
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-sm font-medium text-slate-100 truncate">{p.name}</p>
+                    {(p.phone || p.email) && (
+                      <p className="text-xs text-slate-500 truncate">
+                        {[p.phone, p.email].filter(Boolean).join(' · ')}
+                      </p>
+                    )}
+                  </div>
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {addTab === 'new' && (
+          <PlayerForm data={newPlayerForm} onChange={setNewPlayerForm} />
+        )}
       </Modal>
 
       {/* ── Edit modal ─────────────────────────────── */}
@@ -187,31 +293,29 @@ export default function Players() {
         <PlayerForm data={form} onChange={setForm} />
       </Modal>
 
-      {/* ── Delete confirm ─────────────────────────── */}
+      {/* ── Remove confirm ─────────────────────────── */}
       <ConfirmDialog
-        open={!!deleteTarget}
-        title="Remove player?"
-        message={`Remove ${deleteTarget?.name} from the player list? This won't affect past game records.`}
+        open={!!removeTarget}
+        title="Remove from group?"
+        message={`Remove ${removeTarget?.name} from this group? Their profile and game history are preserved.`}
         confirmLabel="Remove"
         danger
-        loading={deleting}
-        onConfirm={handleDelete}
-        onCancel={() => setDeleteTarget(null)}
+        loading={removing}
+        onConfirm={handleRemove}
+        onCancel={() => setRemoveTarget(null)}
       />
     </>
   )
 }
 
-function PlayerCard({ player, onEdit, onDelete }) {
+function PlayerCard({ player, onEdit, onRemove }) {
   return (
     <div className="card flex items-start gap-3 py-3">
-      {/* Avatar */}
       <div className="w-10 h-10 rounded-full bg-emerald-900/40 text-emerald-400 font-bold text-sm
                       flex items-center justify-center shrink-0 uppercase">
         {player.name.charAt(0)}
       </div>
 
-      {/* Info */}
       <div className="flex-1 min-w-0">
         <p className="font-semibold text-slate-100 truncate">{player.name}</p>
         {(player.phone || player.email) && (
@@ -224,7 +328,6 @@ function PlayerCard({ player, onEdit, onDelete }) {
         </div>
       </div>
 
-      {/* Actions */}
       <div className="flex items-center gap-1 shrink-0">
         <button
           onClick={onEdit}
@@ -237,13 +340,13 @@ function PlayerCard({ player, onEdit, onDelete }) {
           </svg>
         </button>
         <button
-          onClick={onDelete}
+          onClick={onRemove}
           className="p-2 text-slate-500 active:text-red-400 rounded-lg active:bg-red-900/20"
-          aria-label="Delete"
+          aria-label="Remove from group"
         >
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-              d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+              d="M13 7a4 4 0 11-8 0 4 4 0 018 0zM9 14a6 6 0 00-6 6h12a6 6 0 00-6-6zM21 12h-6" />
           </svg>
         </button>
       </div>

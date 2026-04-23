@@ -1,5 +1,6 @@
 import { Outlet, NavLink, useNavigate } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth.jsx'
+import { useGroup } from '../contexts/GroupContext.jsx'
 
 const NAV = [
   {
@@ -36,10 +37,16 @@ const NAV = [
 
 export default function Layout() {
   const { logout } = useAuth()
+  const { activeGroup, clearGroup } = useGroup()
   const navigate = useNavigate()
 
+  const handleLogout = () => {
+    clearGroup()
+    logout()
+    navigate('/login')
+  }
+
   return (
-    /* Full viewport, centered column — max-w-lg constrains on desktop */
     <div className="min-h-screen flex flex-col bg-slate-950">
       <div className="flex-1 flex flex-col w-full max-w-lg mx-auto bg-slate-900 shadow-sm sm:shadow-2xl relative">
 
@@ -52,8 +59,23 @@ export default function Layout() {
             <span className="text-2xl leading-none text-emerald-400">♠</span>
             <span className="font-bold text-slate-100 text-lg tracking-tight">StackSettle</span>
           </button>
+
+          {/* Active group chip */}
+          {activeGroup && (
+            <button
+              onClick={() => navigate('/groups')}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-900/30 border border-emerald-700/40
+                         text-emerald-400 text-xs font-medium active:bg-emerald-900/50 transition-colors max-w-[140px]"
+            >
+              <span className="truncate">{activeGroup.name}</span>
+              <svg className="w-3 h-3 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+              </svg>
+            </button>
+          )}
+
           <button
-            onClick={() => { logout(); navigate('/login') }}
+            onClick={handleLogout}
             className="text-sm text-slate-500 active:text-slate-300 px-2 py-1"
           >
             Logout
@@ -67,7 +89,6 @@ export default function Layout() {
 
         {/* Bottom navigation */}
         <nav className="fixed bottom-0 left-0 right-0 bg-slate-900 border-t border-slate-700/80 flex z-20 safe-area-bottom sm:sticky sm:bottom-auto sm:top-auto">
-          {/* On desktop the nav is still at bottom of the fixed column */}
           <div className="w-full max-w-lg mx-auto flex">
             {NAV.map(({ to, label, icon }) => (
               <NavLink

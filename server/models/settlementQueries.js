@@ -1,7 +1,7 @@
 const db = require('./db')
 
 // Fetch all finalized+unsettled games in a date range with player net results
-const getUnsettledGames = ({ dateFrom, dateTo, gameIds }) => {
+const getUnsettledGames = ({ groupId, dateFrom, dateTo, gameIds }) => {
   if (gameIds?.length) {
     return db.query(
       `SELECT
@@ -20,6 +20,7 @@ const getUnsettledGames = ({ dateFrom, dateTo, gameIds }) => {
   }
   const conditions = ["g.status = 'finalized'"]
   const vals = []
+  if (groupId)  { vals.push(groupId);  conditions.push(`g.group_id = $${vals.length}`) }
   if (dateFrom) { vals.push(dateFrom); conditions.push(`g.game_date >= $${vals.length}`) }
   if (dateTo)   { vals.push(dateTo);   conditions.push(`g.game_date <= $${vals.length}`) }
 
@@ -48,10 +49,10 @@ const createBatch = async (settlements) => {
     for (const s of settlements) {
       const { rows: r } = await client.query(
         `INSERT INTO settlements
-           (from_player_id, to_player_id, amount, game_ids, period_start, period_end)
-         VALUES ($1,$2,$3,$4,$5,$6)
+           (from_player_id, to_player_id, amount, game_ids, period_start, period_end, group_id)
+         VALUES ($1,$2,$3,$4,$5,$6,$7)
          RETURNING *`,
-        [s.from_player_id, s.to_player_id, s.amount, s.game_ids, s.period_start, s.period_end]
+        [s.from_player_id, s.to_player_id, s.amount, s.game_ids, s.period_start, s.period_end, s.group_id]
       )
       rows.push(...r)
     }
@@ -79,17 +80,20 @@ const markGamesSettled = async (gameIds) => {
   )
 }
 
-const listHistory = () =>
+const listHistory = (groupId) =>
   db.query(
     `SELECT
        s.*,
        fp.name AS from_name, tp.name AS to_name,
-       fp.venmo_handle AS to_venmo, fp.cashapp_tag AS to_cashapp,
-       tp.venmo_handle AS to_venmo2, tp.cashapp_tag AS to_cashapp2
+       tp.venmo_handle AS to_venmo, tp.cashapp_tag AS to_cashapp,
+       tp.zelle_contact AS to_zelle, tp.paypal_handle AS to_paypal,
+       tp.other_payment AS to_other
      FROM settlements s
      JOIN players fp ON fp.id = s.from_player_id
      JOIN players tp ON tp.id = s.to_player_id
-     ORDER BY s.created_at DESC`
+     WHERE s.group_id = $1
+     ORDER BY s.created_at DESC`,
+    [groupId]
   )
 
 module.exports = { getUnsettledGames, createBatch, markGamesSettled, listHistory }

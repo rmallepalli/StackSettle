@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { format } from 'date-fns'
 import { getGames } from '../services/games.js'
+import { useGroup } from '../contexts/GroupContext.jsx'
 import useFetch from '../hooks/useFetch.js'
 import StatusBadge from '../components/StatusBadge.jsx'
 import CurrencyDisplay from '../components/CurrencyDisplay.jsx'
@@ -18,6 +19,7 @@ const STATUS_FILTERS = [
 
 export default function Games() {
   const navigate = useNavigate()
+  const { activeGroup } = useGroup()
   const [statusFilter, setStatusFilter] = useState('')
   const [showFilters, setShowFilters]   = useState(false)
   const [hostSearch,  setHostSearch]    = useState('')
@@ -27,6 +29,7 @@ export default function Games() {
   const activeFilterCount = [hostSearch, dateFrom, dateTo].filter(Boolean).length
 
   const filters = {
+    group_id: activeGroup?.id,
     ...(statusFilter && { status: statusFilter }),
     ...(hostSearch   && { host: hostSearch }),
     ...(dateFrom     && { dateFrom }),
@@ -35,7 +38,7 @@ export default function Games() {
 
   const { data: games, loading, error, refetch } = useFetch(
     () => getGames(filters),
-    [statusFilter, hostSearch, dateFrom, dateTo]
+    [activeGroup?.id, statusFilter, hostSearch, dateFrom, dateTo]
   )
 
   const clearFilters = () => {

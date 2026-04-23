@@ -5,8 +5,8 @@ const tq  = require('../models/transactionQueries')
 
 const list = async (req, res, next) => {
   try {
-    const { status, host, dateFrom, dateTo } = req.query
-    const { rows } = await gq.list({ status, hostSearch: host, dateFrom, dateTo })
+    const { group_id, status, host, dateFrom, dateTo } = req.query
+    const { rows } = await gq.list({ groupId: group_id, status, hostSearch: host, dateFrom, dateTo })
     res.json(rows)
   } catch (err) { next(err) }
 }
@@ -21,10 +21,11 @@ const getOne = async (req, res, next) => {
 
 const create = async (req, res, next) => {
   try {
-    const { host_name, game_date, settlement_period, notes, player_ids } = req.body
+    const { group_id, host_name, game_date, settlement_period, notes, player_ids } = req.body
     if (!host_name?.trim()) return res.status(400).json({ error: 'host_name is required' })
+    if (!group_id) return res.status(400).json({ error: 'group_id is required' })
 
-    const { rows } = await gq.create({ host_name, game_date, settlement_period, notes })
+    const { rows } = await gq.create({ group_id, host_name, game_date, settlement_period, notes })
     const game = rows[0]
 
     // Optionally add players during creation
@@ -78,6 +79,16 @@ const addPlayer = async (req, res, next) => {
     }
 
     await gpq.addPlayer(game_id, player_id)
+
+    // Auto-enroll player into the game's group for membership consistency
+    const db = require('../models/db')
+    await db.query(
+      `INSERT INTO group_players (group_id, player_id)
+       SELECT group_id, $1 FROM games WHERE id = $2
+       ON CONFLICT DO NOTHING`,
+      [player_id, game_id]
+    )
+
     const game = await gq.findById(game_id)
     res.status(201).json(game)
   } catch (err) { next(err) }

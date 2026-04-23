@@ -1,22 +1,25 @@
 const sq = require('../models/settlementQueries')
 const { minimizeDebts } = require('../utils/debtMinimizer')
 
-// GET /api/settlements — history log
+// GET /api/settlements?group_id=X — history log
 const list = async (req, res, next) => {
   try {
-    const { rows } = await sq.listHistory()
+    const { group_id } = req.query
+    if (!group_id) return res.status(400).json({ error: 'group_id is required' })
+    const { rows } = await sq.listHistory(group_id)
     res.json(rows)
   } catch (err) { next(err) }
 }
 
 // POST /api/settlements/calculate
-// Body: { dateFrom, dateTo, gameIds[] }
+// Body: { group_id, dateFrom, dateTo, gameIds[] }
 // Returns the calculated transactions WITHOUT saving them
 const calculate = async (req, res, next) => {
   try {
-    const { dateFrom, dateTo, gameIds } = req.body
+    const { group_id, dateFrom, dateTo, gameIds } = req.body
+    if (!group_id) return res.status(400).json({ error: 'group_id is required' })
 
-    const { rows } = await sq.getUnsettledGames({ dateFrom, dateTo, gameIds })
+    const { rows } = await sq.getUnsettledGames({ groupId: group_id, dateFrom, dateTo, gameIds })
     if (!rows.length) {
       return res.json({ transactions: [], games: [], playerSummary: [] })
     }
@@ -60,10 +63,11 @@ const calculate = async (req, res, next) => {
 
 // POST /api/settlements
 // Saves a settlement batch and marks games as settled
-// Body: { transactions: [...], gameIds: [...], periodStart, periodEnd }
+// Body: { group_id, transactions: [...], gameIds: [...], periodStart, periodEnd }
 const save = async (req, res, next) => {
   try {
-    const { transactions, gameIds, periodStart, periodEnd } = req.body
+    const { group_id, transactions, gameIds, periodStart, periodEnd } = req.body
+    if (!group_id) return res.status(400).json({ error: 'group_id is required' })
     if (!Array.isArray(transactions) || !transactions.length) {
       return res.status(400).json({ error: 'transactions array required' })
     }
@@ -78,6 +82,7 @@ const save = async (req, res, next) => {
       game_ids:       gameIds,
       period_start:   periodStart || null,
       period_end:     periodEnd   || null,
+      group_id,
     }))
 
     const saved = await sq.createBatch(toSave)

@@ -3,6 +3,7 @@ import { format, startOfMonth, endOfMonth, startOfQuarter, endOfQuarter,
          subMonths, subQuarters } from 'date-fns'
 import toast from 'react-hot-toast'
 import { calculateSettlement, saveSettlement, getSettlements } from '../services/settlements.js'
+import { useGroup } from '../contexts/GroupContext.jsx'
 import useFetch from '../hooks/useFetch.js'
 import EmptyState from '../components/EmptyState.jsx'
 import CurrencyDisplay from '../components/CurrencyDisplay.jsx'
@@ -73,6 +74,8 @@ export default function Settlements() {
 // Calculate tab
 // ─────────────────────────────────────────────────────────────
 function CalculateTab() {
+  const { activeGroup } = useGroup()
+  const groupId = activeGroup?.id
   const [selectedPreset, setSelectedPreset] = useState(0)
   const [customFrom,  setCustomFrom]  = useState('')
   const [customTo,    setCustomTo]    = useState('')
@@ -95,7 +98,7 @@ function CalculateTab() {
     setResult(null)
     setRecalcNeeded(false)
     try {
-      const data = await calculateSettlement({ dateFrom: dateFrom||undefined, dateTo: dateTo||undefined })
+      const data = await calculateSettlement({ group_id: groupId, dateFrom: dateFrom||undefined, dateTo: dateTo||undefined })
       setResult(data)
       setCheckedGames(new Set(data.games.map((g) => g.game_id)))
     } catch (e) {
@@ -121,7 +124,7 @@ function CalculateTab() {
     setCalculating(true)
     setRecalcNeeded(false)
     try {
-      const data = await calculateSettlement({ gameIds: [...checkedGames] })
+      const data = await calculateSettlement({ group_id: groupId, gameIds: [...checkedGames] })
       setResult((prev) => ({ ...prev, transactions: data.transactions, playerSummary: data.playerSummary }))
     } catch (e) {
       toast.error(e.response?.data?.error || 'Failed to recalculate')
@@ -135,6 +138,7 @@ function CalculateTab() {
     setSettling(true)
     try {
       await saveSettlement({
+        group_id:     groupId,
         transactions: result.transactions,
         gameIds: [...checkedGames],
         periodStart: dateFrom || null,
@@ -468,7 +472,12 @@ function CopyButton({ text }) {
 // History tab
 // ─────────────────────────────────────────────────────────────
 function HistoryTab() {
-  const { data: history, loading, error, refetch } = useFetch(getSettlements)
+  const { activeGroup } = useGroup()
+  const groupId = activeGroup?.id
+  const { data: history, loading, error, refetch } = useFetch(
+    () => getSettlements({ group_id: groupId }),
+    [groupId]
+  )
 
   if (loading) return <PageSpinner />
   if (error)   return (
