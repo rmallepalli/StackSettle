@@ -12,7 +12,7 @@ export default function Groups() {
   const { activeGroup, selectGroup } = useGroup()
   const navigate = useNavigate()
 
-  const { data: groups, loading, refetch } = useFetch(getGroups)
+  const { data: groups, loading, error, refetch } = useFetch(getGroups)
   const [showCreate, setShowCreate] = useState(false)
   const [name, setName]             = useState('')
   const [description, setDescription] = useState('')
@@ -79,7 +79,14 @@ export default function Groups() {
           </div>
         )}
 
-        {!loading && groups?.length === 0 && (
+        {error && (
+          <div className="text-center py-6">
+            <p className="text-sm text-red-400 mb-3">Could not load groups. Is the server running?</p>
+            <button className="btn-secondary text-sm px-4 py-2" onClick={refetch}>Retry</button>
+          </div>
+        )}
+
+        {!loading && !error && !groups?.length && (
           <div className="flex flex-col items-center justify-center py-16 text-center">
             <div className="text-5xl mb-4">🃏</div>
             <h3 className="text-lg font-semibold text-slate-100 mb-1">No groups yet</h3>
