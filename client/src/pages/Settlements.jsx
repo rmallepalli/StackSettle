@@ -2,6 +2,7 @@ import { useState, useMemo } from 'react'
 import { format, startOfMonth, endOfMonth, startOfQuarter, endOfQuarter,
          subMonths, subQuarters } from 'date-fns'
 import toast from 'react-hot-toast'
+import * as XLSX from 'xlsx'
 import { calculateSettlement, saveSettlement, getSettlements } from '../services/settlements.js'
 import { useGroup } from '../contexts/GroupContext.jsx'
 import useFetch from '../hooks/useFetch.js'
@@ -9,6 +10,67 @@ import EmptyState from '../components/EmptyState.jsx'
 import CurrencyDisplay from '../components/CurrencyDisplay.jsx'
 import ConfirmDialog from '../components/ConfirmDialog.jsx'
 import { PageSpinner } from '../components/Spinner.jsx'
+
+// ─────────────────────────────────────────────────────────────
+// Excel export helpers
+// ─────────────────────────────────────────────────────────────
+function exportCalculation({ transactions, games, playerSummary, groupName, dateFrom, dateTo }) {
+  const wb = XLSX.utils.book_new()
+
+  // Sheet 1 — Payment Instructions
+  const txRows = transactions.length
+    ? transactions.map((tx, i) => ({
+        '#':         i + 1,
+        'Pays From': tx.from_name,
+        'Pays To':   tx.to_name,
+        'Amount ($)': tx.amount,
+        'Venmo':      tx.to_venmo   || '',
+        'Cash App':   tx.to_cashapp || '',
+        'Zelle':      tx.to_zelle   || '',
+        'PayPal':     tx.to_paypal  || '',
+        'Other':      tx.to_other   || '',
+      }))
+    : [{ '#': '', 'Pays From': 'Everyone is even — no payments needed.', 'Pays To': '', 'Amount ($)': '' }]
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(txRows), 'Payments')
+
+  // Sheet 2 — Player Totals
+  const playerRows = [...playerSummary]
+    .sort((a, b) => b.net_total - a.net_total)
+    .map(p => ({
+      'Player':     p.player_name,
+      'Net ($)':    parseFloat(p.net_total.toFixed(2)),
+      'Result':     p.net_total > 0 ? 'Won' : p.net_total < 0 ? 'Lost' : 'Even',
+      'Games':      p.games.length,
+    }))
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(playerRows), 'Player Totals')
+
+  // Sheet 3 — Games Included
+  const gameRows = games.map(g => ({
+    'Date': format(new Date(g.game_date), 'MMM d, yyyy'),
+    'Host': g.host_name,
+  }))
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(gameRows), 'Games')
+
+  const period = [dateFrom, dateTo].filter(Boolean).join(' to ') || 'all-time'
+  const slug   = groupName ? groupName.replace(/\s+/g, '_') : 'group'
+  XLSX.writeFile(wb, `settlement_${slug}_${period}.xlsx`)
+}
+
+function exportHistory(history, groupName) {
+  const wb = XLSX.utils.book_new()
+
+  const rows = history.map(s => ({
+    'Date':           format(new Date(s.created_at), 'MMM d, yyyy'),
+    'Paid By':        s.from_name,
+    'Paid To':        s.to_name,
+    'Amount ($)':     parseFloat(parseFloat(s.amount).toFixed(2)),
+    'Games Covered':  s.game_ids?.length || 0,
+  }))
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(rows), 'Settlement History')
+
+  const slug = groupName ? groupName.replace(/\s+/g, '_') : 'group'
+  XLSX.writeFile(wb, `settlement_history_${slug}_${format(new Date(), 'yyyy-MM-dd')}.xlsx`)
+}
 
 // ─────────────────────────────────────────────────────────────
 // Period presets
@@ -226,13 +288,32 @@ function CalculateTab() {
               {/* Payment instructions */}
               <PaymentInstructionsSection transactions={result.transactions} />
 
-              {/* Settle up */}
-              {result.transactions.length > 0 && (
-                <button className="btn-primary w-full py-4 text-base"
-                  onClick={() => setSettleConfirm(true)}>
-                  Mark as Settled
+              {/* Export + Settle actions */}
+              <div className="flex gap-3">
+                <button
+                  className="btn-secondary flex-1 py-3 flex items-center justify-center gap-2"
+                  onClick={() => exportCalculation({
+                    transactions: result.transactions,
+                    games: result.games,
+                    playerSummary: result.playerSummary,
+                    groupName: activeGroup?.name,
+                    dateFrom,
+                    dateTo,
+                  })}
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                      d="M12 10v6m0 0l-3-3m3 3l3-3M3 17V7a2 2 0 012-2h6l2 2h6a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2z" />
+                  </svg>
+                  Export Excel
                 </button>
-              )}
+                {result.transactions.length > 0 && (
+                  <button className="btn-primary flex-1 py-3 text-base"
+                    onClick={() => setSettleConfirm(true)}>
+                    Mark as Settled
+                  </button>
+                )}
+              </div>
 
               {result.transactions.length === 0 && result.games.length > 0 && (
                 <div className="card bg-emerald-900/20 border-emerald-700/50 text-center py-4">
@@ -504,6 +585,20 @@ function HistoryTab() {
 
   return (
     <div className="px-4 pt-4 pb-6 space-y-4">
+      {/* Export button */}
+      <div className="flex justify-end">
+        <button
+          className="btn-secondary text-sm py-2 px-4 flex items-center gap-2"
+          onClick={() => exportHistory(history, activeGroup?.name)}
+        >
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+              d="M12 10v6m0 0l-3-3m3 3l3-3M3 17V7a2 2 0 012-2h6l2 2h6a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2z" />
+          </svg>
+          Export Excel
+        </button>
+      </div>
+
       {Object.entries(groups).map(([month, items]) => (
         <section key={month}>
           <h2 className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">{month}</h2>
