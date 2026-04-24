@@ -4,45 +4,46 @@ const list = ({ search } = {}) => {
   if (search) {
     const q = `%${search}%`
     return db.query(
-      `SELECT * FROM players
-       WHERE name ILIKE $1 OR phone ILIKE $1 OR email ILIKE $1
-       ORDER BY name ASC`,
-      [q]
+      `SELECT * FROM players WHERE name LIKE ? OR phone LIKE ? OR email LIKE ? ORDER BY name ASC`,
+      [q, q, q]
     )
   }
   return db.query('SELECT * FROM players ORDER BY name ASC')
 }
 
 const findById = (id) =>
-  db.query('SELECT * FROM players WHERE id = $1', [id])
+  db.query('SELECT * FROM players WHERE id = ?', [id])
 
-const create = ({ name, phone, email, venmo_handle, zelle_contact, paypal_handle, cashapp_tag, other_payment }) =>
-  db.query(
+const create = async ({ name, phone, email, venmo_handle, zelle_contact, paypal_handle, cashapp_tag, other_payment }) => {
+  const result = await db.query(
     `INSERT INTO players (name, phone, email, venmo_handle, zelle_contact, paypal_handle, cashapp_tag, other_payment)
-     VALUES ($1,$2,$3,$4,$5,$6,$7,$8)
-     RETURNING *`,
+     VALUES (?,?,?,?,?,?,?,?)`,
     [name, phone, email, venmo_handle, zelle_contact, paypal_handle, cashapp_tag, other_payment]
   )
+  return db.query('SELECT * FROM players WHERE id = ?', [result.insertId])
+}
 
-const update = (id, fields) => {
+const update = async (id, fields) => {
   const allowed = ['name','phone','email','venmo_handle','zelle_contact','paypal_handle','cashapp_tag','other_payment']
   const sets = []
   const vals = []
   allowed.forEach((col) => {
     if (fields[col] !== undefined) {
+      sets.push(`${col} = ?`)
       vals.push(fields[col])
-      sets.push(`${col} = $${vals.length}`)
     }
   })
-  if (!sets.length) return Promise.resolve({ rows: [] })
+  if (!sets.length) return { rows: [] }
   vals.push(id)
-  return db.query(
-    `UPDATE players SET ${sets.join(', ')} WHERE id = $${vals.length} RETURNING *`,
-    vals
-  )
+  const result = await db.query(`UPDATE players SET ${sets.join(', ')} WHERE id = ?`, vals)
+  if (result.affectedRows === 0) return { rows: [] }
+  return db.query('SELECT * FROM players WHERE id = ?', [id])
 }
 
-const remove = (id) =>
-  db.query('DELETE FROM players WHERE id = $1 RETURNING id', [id])
+const remove = async (id) => {
+  const result = await db.query('DELETE FROM players WHERE id = ?', [id])
+  if (result.affectedRows === 0) return { rows: [] }
+  return { rows: [{ id }] }
+}
 
 module.exports = { list, findById, create, update, remove }

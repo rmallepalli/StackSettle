@@ -5,24 +5,32 @@ const listForGame = (game_id) =>
     `SELECT t.*, p.name AS player_name
      FROM transactions t
      JOIN players p ON p.id = t.player_id
-     WHERE t.game_id = $1
+     WHERE t.game_id = ?
      ORDER BY t.created_at`,
     [game_id]
   )
 
-const create = (game_id, player_id, amount, type, note) =>
-  db.query(
-    `INSERT INTO transactions (game_id, player_id, amount, type, note)
-     VALUES ($1, $2, $3, $4, $5)
-     RETURNING *`,
+const create = async (game_id, player_id, amount, type, note) => {
+  const result = await db.query(
+    `INSERT INTO transactions (game_id, player_id, amount, type, note) VALUES (?, ?, ?, ?, ?)`,
     [game_id, player_id, amount, type || 'buy', note || null]
   )
+  return db.query(
+    `SELECT t.*, p.name AS player_name
+     FROM transactions t
+     JOIN players p ON p.id = t.player_id
+     WHERE t.id = ?`,
+    [result.insertId]
+  )
+}
 
-const remove = (id) =>
-  db.query('DELETE FROM transactions WHERE id = $1 RETURNING id', [id])
+const remove = async (id) => {
+  const result = await db.query('DELETE FROM transactions WHERE id = ?', [id])
+  if (result.affectedRows === 0) return { rows: [] }
+  return { rows: [{ id }] }
+}
 
-// Get one transaction (to verify game ownership before delete)
 const findById = (id) =>
-  db.query('SELECT * FROM transactions WHERE id = $1', [id])
+  db.query('SELECT * FROM transactions WHERE id = ?', [id])
 
 module.exports = { listForGame, create, remove, findById }

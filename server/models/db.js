@@ -1,18 +1,19 @@
-const { Pool } = require('pg')
+const mysql = require('mysql2/promise')
 
-const pool = new Pool({
-  host:     process.env.DB_HOST,
-  port:     parseInt(process.env.DB_PORT || '5432'),
-  database: process.env.DB_NAME,
-  user:     process.env.DB_USER,
-  password: process.env.DB_PASSWORD,
+const pool = mysql.createPool({
+  host:             process.env.DB_HOST,
+  port:             parseInt(process.env.DB_PORT || '3306'),
+  database:         process.env.DB_NAME,
+  user:             process.env.DB_USER,
+  password:         process.env.DB_PASSWORD,
+  waitForConnections: true,
+  connectionLimit:  10,
 })
 
-pool.on('error', (err) => {
-  console.error('Unexpected PostgreSQL error:', err)
-})
-
-module.exports = {
-  query: (text, params) => pool.query(text, params),
-  pool,
+const query = async (sql, params = []) => {
+  const [result] = await pool.query(sql, params)
+  if (Array.isArray(result)) return { rows: result }
+  return { rows: [], insertId: result.insertId, affectedRows: result.affectedRows }
 }
+
+module.exports = { query, pool }

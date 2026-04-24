@@ -83,9 +83,8 @@ const addPlayer = async (req, res, next) => {
     // Auto-enroll player into the game's group for membership consistency
     const db = require('../models/db')
     await db.query(
-      `INSERT INTO group_players (group_id, player_id)
-       SELECT group_id, $1 FROM games WHERE id = $2
-       ON CONFLICT DO NOTHING`,
+      `INSERT IGNORE INTO group_players (group_id, player_id)
+       SELECT group_id, ? FROM games WHERE id = ?`,
       [player_id, game_id]
     )
 

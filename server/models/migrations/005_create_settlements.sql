@@ -1,33 +1,23 @@
 -- Migration 005: Settlements table
--- Records the debt-minimized payment instructions between players,
--- optionally spanning multiple games
-
-CREATE TYPE settlement_status AS ENUM ('pending', 'settled');
 
 CREATE TABLE IF NOT EXISTS settlements (
-  id               SERIAL PRIMARY KEY,
-  from_player_id   INT NOT NULL REFERENCES players(id) ON DELETE RESTRICT,
-  to_player_id     INT NOT NULL REFERENCES players(id) ON DELETE RESTRICT,
-  amount           NUMERIC(10, 2) NOT NULL CHECK (amount > 0),
-
-  -- Which games are rolled up into this settlement
-  game_ids         INT[] NOT NULL DEFAULT '{}',
-
+  id               INT AUTO_INCREMENT PRIMARY KEY,
+  from_player_id   INT NOT NULL,
+  to_player_id     INT NOT NULL,
+  amount           DECIMAL(10, 2) NOT NULL,
+  game_ids         JSON NOT NULL,
   period_start     DATE,
   period_end       DATE,
-  status           settlement_status NOT NULL DEFAULT 'pending',
-  settled_at       TIMESTAMPTZ,
-
-  created_at       TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-  updated_at       TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-
-  CHECK (from_player_id <> to_player_id)
+  status           ENUM('pending', 'settled') NOT NULL DEFAULT 'pending',
+  settled_at       DATETIME,
+  created_at       DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at       DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  CONSTRAINT chk_settlement_amount CHECK (amount > 0),
+  CONSTRAINT chk_settlement_players CHECK (from_player_id <> to_player_id),
+  FOREIGN KEY (from_player_id) REFERENCES players(id) ON DELETE RESTRICT,
+  FOREIGN KEY (to_player_id)   REFERENCES players(id) ON DELETE RESTRICT
 );
-
-CREATE TRIGGER settlements_updated_at
-  BEFORE UPDATE ON settlements
-  FOR EACH ROW EXECUTE FUNCTION set_updated_at();
 
 CREATE INDEX idx_settlements_from   ON settlements(from_player_id);
 CREATE INDEX idx_settlements_to     ON settlements(to_player_id);
-CREATE INDEX idx_settlements_status ON settlements(status);
+CREATE INDEX idx_settlements_status ON settlements(status)

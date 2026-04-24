@@ -9,35 +9,34 @@ require('dotenv').config({ path: require('path').join(__dirname, '../../server/.
 
 const fs   = require('fs')
 const path = require('path')
-const { Pool } = require('pg')
+const mysql = require('mysql2/promise')
 
-const pool = new Pool({
-  host:     process.env.DB_HOST,
-  port:     parseInt(process.env.DB_PORT || '5432'),
-  database: process.env.DB_NAME,
-  user:     process.env.DB_USER,
-  password: process.env.DB_PASSWORD,
+const pool = mysql.createPool({
+  host:             process.env.DB_HOST,
+  port:             parseInt(process.env.DB_PORT || '3306'),
+  database:         process.env.DB_NAME,
+  user:             process.env.DB_USER,
+  password:         process.env.DB_PASSWORD,
+  waitForConnections: true,
+  connectionLimit:  5,
 })
 
 const MIGRATIONS_DIR = path.join(__dirname, 'migrations')
 
 async function run() {
-  const client = await pool.connect()
+  const conn = await pool.getConnection()
   try {
-    // Create migrations tracking table if it doesn't exist
-    await client.query(`
+    await conn.query(`
       CREATE TABLE IF NOT EXISTS _migrations (
-        id         SERIAL PRIMARY KEY,
-        filename   VARCHAR(200) UNIQUE NOT NULL,
-        applied_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+        id         INT AUTO_INCREMENT PRIMARY KEY,
+        filename   VARCHAR(200) NOT NULL UNIQUE,
+        applied_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
       )
     `)
 
-    // Find which migrations have already run
-    const { rows } = await client.query('SELECT filename FROM _migrations')
-    const applied = new Set(rows.map(r => r.filename))
+    const [appliedRows] = await conn.query('SELECT filename FROM _migrations')
+    const applied = new Set(appliedRows.map(r => r.filename))
 
-    // Get sorted list of .sql files
     const files = fs
       .readdirSync(MIGRATIONS_DIR)
       .filter(f => f.endsWith('.sql'))
@@ -50,13 +49,13 @@ async function run() {
         continue
       }
       const sql = fs.readFileSync(path.join(MIGRATIONS_DIR, file), 'utf8')
+      const statements = sql.split(';').map(s => s.trim()).filter(Boolean)
+
       console.log(`  apply ${file}`)
-      await client.query('BEGIN')
-      await client.query(sql)
-      await client.query(
-        'INSERT INTO _migrations (filename) VALUES ($1)', [file]
-      )
-      await client.query('COMMIT')
+      for (const stmt of statements) {
+        await conn.query(stmt)
+      }
+      await conn.query('INSERT INTO _migrations (filename) VALUES (?)', [file])
       count++
     }
 
@@ -66,22 +65,21 @@ async function run() {
       console.log(`\nApplied ${count} migration(s).`)
     }
 
-    // Optional seed
     if (process.argv.includes('--seed')) {
       const seedPath = path.join(__dirname, 'seed.sql')
       if (fs.existsSync(seedPath)) {
         console.log('\nSeeding dev data…')
         const seed = fs.readFileSync(seedPath, 'utf8')
-        await client.query(seed)
+        const seedStmts = seed.split(';').map(s => s.trim()).filter(Boolean)
+        for (const stmt of seedStmts) await conn.query(stmt)
         console.log('Seed complete.')
       }
     }
   } catch (err) {
-    await client.query('ROLLBACK').catch(() => {})
     console.error('Migration failed:', err.message)
     process.exit(1)
   } finally {
-    client.release()
+    conn.release()
     await pool.end()
   }
 }

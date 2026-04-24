@@ -1,8 +1,8 @@
 const db = require('./db')
 
-// Fetch all finalized+unsettled games in a date range with player net results
 const getUnsettledGames = ({ groupId, dateFrom, dateTo, gameIds }) => {
   if (gameIds?.length) {
+    const placeholders = gameIds.map(() => '?').join(',')
     return db.query(
       `SELECT
          g.id AS game_id, g.game_date, g.host_name,
@@ -13,16 +13,16 @@ const getUnsettledGames = ({ groupId, dateFrom, dateTo, gameIds }) => {
        FROM games g
        JOIN game_players gp ON gp.game_id = g.id
        JOIN players p ON p.id = gp.player_id
-       WHERE g.id = ANY($1) AND g.status = 'finalized'
+       WHERE g.id IN (${placeholders}) AND g.status = 'finalized'
        ORDER BY g.game_date, p.name`,
-      [gameIds]
+      gameIds
     )
   }
   const conditions = ["g.status = 'finalized'"]
   const vals = []
-  if (groupId)  { vals.push(groupId);  conditions.push(`g.group_id = $${vals.length}`) }
-  if (dateFrom) { vals.push(dateFrom); conditions.push(`g.game_date >= $${vals.length}`) }
-  if (dateTo)   { vals.push(dateTo);   conditions.push(`g.game_date <= $${vals.length}`) }
+  if (groupId)  { vals.push(groupId);  conditions.push('g.group_id = ?') }
+  if (dateFrom) { vals.push(dateFrom); conditions.push('g.game_date >= ?') }
+  if (dateTo)   { vals.push(dateTo);   conditions.push('g.game_date <= ?') }
 
   return db.query(
     `SELECT
@@ -40,43 +40,43 @@ const getUnsettledGames = ({ groupId, dateFrom, dateTo, gameIds }) => {
   )
 }
 
-// Save a batch of settlement transactions
 const createBatch = async (settlements) => {
-  const client = await require('./db').pool.connect()
+  const conn = await require('./db').pool.getConnection()
   try {
-    await client.query('BEGIN')
+    await conn.beginTransaction()
     const rows = []
     for (const s of settlements) {
-      const { rows: r } = await client.query(
+      const [result] = await conn.query(
         `INSERT INTO settlements
            (from_player_id, to_player_id, amount, game_ids, period_start, period_end, group_id)
-         VALUES ($1,$2,$3,$4,$5,$6,$7)
-         RETURNING *`,
-        [s.from_player_id, s.to_player_id, s.amount, s.game_ids, s.period_start, s.period_end, s.group_id]
+         VALUES (?,?,?,?,?,?,?)`,
+        [s.from_player_id, s.to_player_id, s.amount,
+         JSON.stringify(s.game_ids), s.period_start, s.period_end, s.group_id]
       )
-      rows.push(...r)
+      const [fetched] = await conn.query('SELECT * FROM settlements WHERE id = ?', [result.insertId])
+      rows.push(...fetched)
     }
-    await client.query('COMMIT')
+    await conn.commit()
     return rows
   } catch (err) {
-    await client.query('ROLLBACK')
+    await conn.rollback()
     throw err
   } finally {
-    client.release()
+    conn.release()
   }
 }
 
-// Mark a batch of games as settled and their settlement rows as settled
 const markGamesSettled = async (gameIds) => {
+  const placeholders = gameIds.map(() => '?').join(',')
   await db.query(
     `UPDATE games SET status = 'settled', settled_date = CURRENT_DATE
-     WHERE id = ANY($1) AND status = 'finalized'`,
-    [gameIds]
+     WHERE id IN (${placeholders}) AND status = 'finalized'`,
+    gameIds
   )
   await db.query(
     `UPDATE settlements SET status = 'settled', settled_at = NOW()
-     WHERE game_ids && $1 AND status = 'pending'`,
-    [gameIds]
+     WHERE JSON_OVERLAPS(game_ids, ?) AND status = 'pending'`,
+    [JSON.stringify(gameIds)]
   )
 }
 
@@ -91,7 +91,7 @@ const listHistory = (groupId) =>
      FROM settlements s
      JOIN players fp ON fp.id = s.from_player_id
      JOIN players tp ON tp.id = s.to_player_id
-     WHERE s.group_id = $1
+     WHERE s.group_id = ?
      ORDER BY s.created_at DESC`,
     [groupId]
   )
