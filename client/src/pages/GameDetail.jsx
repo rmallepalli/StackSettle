@@ -163,12 +163,6 @@ export default function GameDetail() {
 
     if (!payload.length) return toast.error('Enter at least one stack')
 
-    const stackTotal = payload.reduce((s, p) => s + p.ending_stack, 0)
-    const diff = Math.abs(stackTotal - totalPot)
-    if (diff > 0.01) {
-      toast.error(`Stacks $${stackTotal.toFixed(2)} ≠ Pot $${totalPot.toFixed(2)} (Δ $${diff.toFixed(2)})`)
-      return
-    }
     setStacksSaving(true)
     try {
       await bulkUpdateStacks(game.id, payload)
@@ -238,6 +232,13 @@ export default function GameDetail() {
     const missing = game.players.filter((p) => p.ending_stack == null)
     if (missing.length) {
       toast.error(`Missing stack for: ${missing.map((p) => p.name).join(', ')}`)
+      setFinalizeConfirm(false)
+      return
+    }
+    const stackTotal = game.players.reduce((s, p) => s + parseFloat(p.ending_stack || 0), 0)
+    const diff = Math.abs(stackTotal - totalPot)
+    if (diff > 0.01) {
+      toast.error(`Stacks $${stackTotal.toFixed(2)} ≠ Pot $${totalPot.toFixed(2)} (Δ $${diff.toFixed(2)})`)
       setFinalizeConfirm(false)
       return
     }
