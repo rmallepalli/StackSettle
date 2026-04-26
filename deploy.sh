@@ -14,10 +14,10 @@ git pull
 
 echo ">>> Installing server dependencies..."
 cd $BASE/server
-npm install
+/opt/alt/alt-nodejs22/root/bin/npm install
 
 echo ">>> Running migrations..."
-node models/migrate.js
+/opt/alt/alt-nodejs22/root/bin/node models/migrate.js
 
 echo ">>> Restarting app..."
 touch $BASE/tmp/restart.txt
