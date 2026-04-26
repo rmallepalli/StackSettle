@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react'
+import { useState } from 'react'
 import { format, startOfMonth, endOfMonth, startOfQuarter, endOfQuarter,
          subMonths, subQuarters } from 'date-fns'
 import toast from 'react-hot-toast'
@@ -559,6 +559,7 @@ function HistoryTab() {
     () => getSettlements({ group_id: groupId }),
     [groupId]
   )
+  const [expanded, setExpanded] = useState({})
 
   if (loading) return <PageSpinner />
   if (error)   return (
@@ -575,13 +576,29 @@ function HistoryTab() {
     />
   )
 
-  // Group by created_at date
-  const groups = {}
+  // Group individual payments into settlement batches by game_ids + date
+  const batchMap = {}
   for (const s of history) {
-    const key = format(new Date(s.created_at), 'MMMM yyyy')
-    if (!groups[key]) groups[key] = []
-    groups[key].push(s)
+    const gameKey = JSON.stringify([...(s.game_ids || [])].sort((a, b) => a - b))
+    const dateKey = format(new Date(s.created_at), 'yyyy-MM-dd')
+    const key = `${gameKey}_${dateKey}`
+    if (!batchMap[key]) {
+      batchMap[key] = { key, date: s.created_at, game_ids: s.game_ids || [], payments: [], total: 0 }
+    }
+    batchMap[key].payments.push(s)
+    batchMap[key].total += parseFloat(s.amount)
   }
+  const batches = Object.values(batchMap).sort((a, b) => new Date(b.date) - new Date(a.date))
+
+  // Group batches by month for section headers
+  const monthGroups = {}
+  for (const b of batches) {
+    const month = format(new Date(b.date), 'MMMM yyyy')
+    if (!monthGroups[month]) monthGroups[month] = []
+    monthGroups[month].push(b)
+  }
+
+  const toggleBatch = (key) => setExpanded((prev) => ({ ...prev, [key]: !prev[key] }))
 
   return (
     <div className="px-4 pt-4 pb-6 space-y-4">
@@ -599,27 +616,57 @@ function HistoryTab() {
         </button>
       </div>
 
-      {Object.entries(groups).map(([month, items]) => (
+      {Object.entries(monthGroups).map(([month, monthBatches]) => (
         <section key={month}>
           <h2 className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">{month}</h2>
-          <div className="card py-0 divide-y divide-slate-700">
-            {items.map((s) => (
-              <div key={s.id} className="flex items-center gap-3 px-4 py-3">
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-slate-100">
-                    <span className="text-red-400">{s.from_name}</span>
-                    <span className="text-slate-600 mx-1">→</span>
-                    <span className="text-emerald-400">{s.to_name}</span>
-                  </p>
-                  <p className="text-xs text-slate-500">
-                    {format(new Date(s.created_at), 'MMM d, yyyy')}
-                    {s.game_ids?.length > 0 && ` · ${s.game_ids.length} game${s.game_ids.length !== 1 ? 's' : ''}`}
-                  </p>
-                </div>
-                <span className="text-sm font-bold text-slate-100 shrink-0">
-                  ${parseFloat(s.amount).toFixed(2)}
-                </span>
-                <span className="badge-gray">Settled</span>
+          <div className="space-y-2">
+            {monthBatches.map((batch) => (
+              <div key={batch.key} className="card py-0 overflow-hidden">
+                {/* Batch header — tap to expand */}
+                <button
+                  className="w-full flex items-center gap-3 px-4 py-3 text-left active:bg-slate-700/40"
+                  onClick={() => toggleBatch(batch.key)}
+                >
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-semibold text-slate-100">
+                      Settlement · {format(new Date(batch.date), 'MMM d, yyyy')}
+                    </p>
+                    <p className="text-xs text-slate-500 mt-0.5">
+                      {batch.game_ids.length} game{batch.game_ids.length !== 1 ? 's' : ''}
+                      {' · '}
+                      {batch.payments.length} payment{batch.payments.length !== 1 ? 's' : ''}
+                    </p>
+                  </div>
+                  <span className="text-sm font-bold text-slate-100 shrink-0">
+                    ${batch.total.toFixed(2)}
+                  </span>
+                  <svg
+                    className={`w-4 h-4 text-slate-500 shrink-0 transition-transform ${expanded[batch.key] ? 'rotate-180' : ''}`}
+                    fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                  >
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                  </svg>
+                </button>
+
+                {/* Payments list — collapsible */}
+                {expanded[batch.key] && (
+                  <div className="border-t border-slate-700 divide-y divide-slate-700/60">
+                    {batch.payments.map((s) => (
+                      <div key={s.id} className="flex items-center gap-3 px-4 py-2.5">
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm text-slate-100">
+                            <span className="text-red-400">{s.from_name}</span>
+                            <span className="text-slate-600 mx-1.5">→</span>
+                            <span className="text-emerald-400">{s.to_name}</span>
+                          </p>
+                        </div>
+                        <span className="text-sm font-semibold text-slate-100 shrink-0">
+                          ${parseFloat(s.amount).toFixed(2)}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             ))}
           </div>
