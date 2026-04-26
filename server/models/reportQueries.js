@@ -33,20 +33,21 @@ const gameSummary = ({ groupId, dateFrom, dateTo }) => {
   if (dateFrom) { vals.push(dateFrom); conditions.push('g.game_date >= ?') }
   if (dateTo)   { vals.push(dateTo);   conditions.push('g.game_date <= ?') }
 
+  // Subquery produces one row per game with that game's total pot,
+  // then outer query aggregates — avoids COUNT/AVG being multiplied by player count.
   return db.query(
     `SELECT
-       COUNT(*)                                      AS total_games,
-       CAST(SUM(gp.buy_in_total) AS DECIMAL(10,2))  AS total_money,
-       CAST(MAX(gp.buy_in_total) AS DECIMAL(10,2))  AS biggest_pot,
-       CAST(AVG(pot.pot)         AS DECIMAL(10,2))  AS avg_pot
-     FROM games g
-     LEFT JOIN game_players gp ON gp.game_id = g.id
-     LEFT JOIN (
-       SELECT game_id, SUM(buy_in_total) AS pot
-       FROM game_players
-       GROUP BY game_id
-     ) pot ON pot.game_id = g.id
-     WHERE ${conditions.join(' AND ')}`,
+       COUNT(*)                          AS total_games,
+       CAST(SUM(pot) AS DECIMAL(10,2))  AS total_money,
+       CAST(MAX(pot) AS DECIMAL(10,2))  AS biggest_pot,
+       CAST(AVG(pot) AS DECIMAL(10,2))  AS avg_pot
+     FROM (
+       SELECT g.id, COALESCE(SUM(gp.buy_in_total), 0) AS pot
+       FROM games g
+       LEFT JOIN game_players gp ON gp.game_id = g.id
+       WHERE ${conditions.join(' AND ')}
+       GROUP BY g.id
+     ) game_pots`,
     vals
   )
 }

@@ -704,7 +704,7 @@ function exportReports({ players, summary, groupName, periodLabel }) {
     'Worst Game ($)': p.worst_game,
     'Total Buy-in ($)': p.total_buy_in,
   }))
-  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(leaderboardRows), 'Leaderboard')
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(leaderboardRows), 'Player Details')
 
   const summaryRows = [
     { 'Metric': 'Total Games',  'Value': summary.total_games },
