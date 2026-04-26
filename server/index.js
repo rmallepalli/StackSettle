@@ -20,6 +20,7 @@ app.use('/api/groups', require('./routes/groups'))
 app.use('/api/games', require('./routes/games'))
 app.use('/api/transactions', require('./routes/transactions'))
 app.use('/api/settlements', require('./routes/settlements'))
+app.use('/api/reports',     require('./routes/reports'))
 
 // Health check
 app.get('/api/health', (_req, res) => res.json({ status: 'ok' }))

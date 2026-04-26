@@ -7,3 +7,6 @@ export const calculateSettlement = (params) =>
 
 export const saveSettlement = (data) =>
   api.post('/settlements', data).then(r => r.data)
+
+export const getPlayerStats = (params) =>
+  api.get('/reports/player-stats', { params }).then(r => r.data)

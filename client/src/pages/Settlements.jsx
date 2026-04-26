@@ -3,7 +3,7 @@ import { format, startOfMonth, endOfMonth, startOfQuarter, endOfQuarter,
          subMonths, subQuarters } from 'date-fns'
 import toast from 'react-hot-toast'
 import * as XLSX from 'xlsx'
-import { calculateSettlement, saveSettlement, getSettlements } from '../services/settlements.js'
+import { calculateSettlement, saveSettlement, getSettlements, getPlayerStats } from '../services/settlements.js'
 import { useGroup } from '../contexts/GroupContext.jsx'
 import useFetch from '../hooks/useFetch.js'
 import EmptyState from '../components/EmptyState.jsx'
@@ -104,7 +104,7 @@ const PRESETS = [
 
 // ─────────────────────────────────────────────────────────────
 export default function Settlements() {
-  const [activeTab, setActiveTab] = useState('calculate') // 'calculate' | 'history'
+  const [activeTab, setActiveTab] = useState('calculate') // 'calculate' | 'history' | 'reports'
 
   return (
     <>
@@ -114,7 +114,7 @@ export default function Settlements() {
         </div>
         {/* Tabs */}
         <div className="flex px-4 mt-2">
-          {[['calculate','Calculate'],['history','History']].map(([val, label]) => (
+          {[['calculate','Calculate'],['history','History'],['reports','Reports']].map(([val, label]) => (
             <button key={val} onClick={() => setActiveTab(val)}
               className={`flex-1 py-2.5 text-sm font-medium border-b-2 transition-colors ${
                 activeTab === val
@@ -127,7 +127,9 @@ export default function Settlements() {
         </div>
       </div>
 
-      {activeTab === 'calculate' ? <CalculateTab /> : <HistoryTab />}
+      {activeTab === 'calculate' && <CalculateTab />}
+      {activeTab === 'history'   && <HistoryTab />}
+      {activeTab === 'reports'   && <ReportsTab />}
     </>
   )
 }
@@ -672,6 +674,211 @@ function HistoryTab() {
           </div>
         </section>
       ))}
+    </div>
+  )
+}
+
+// ─────────────────────────────────────────────────────────────
+// Reports tab
+// ─────────────────────────────────────────────────────────────
+const REPORT_PRESETS = [
+  { label: 'All time',      dateFrom: '',                                                dateTo: '' },
+  { label: 'This year',     dateFrom: `${new Date().getFullYear()}-01-01`,               dateTo: `${new Date().getFullYear()}-12-31` },
+  { label: 'Last 6 months', dateFrom: format(subMonths(today, 6), 'yyyy-MM-dd'),         dateTo: format(today, 'yyyy-MM-dd') },
+  { label: 'This quarter',  dateFrom: format(startOfQuarter(today), 'yyyy-MM-dd'),       dateTo: format(endOfQuarter(today), 'yyyy-MM-dd') },
+  { label: 'Custom…',       dateFrom: null,                                              dateTo: null },
+]
+
+function exportReports({ players, summary, groupName, periodLabel }) {
+  const wb = XLSX.utils.book_new()
+
+  const leaderboardRows = players.map((p, i) => ({
+    'Rank':         i + 1,
+    'Player':       p.player_name,
+    'Games':        p.games_played,
+    'Net ($)':      p.net_total,
+    'Wins':         p.wins,
+    'Losses':       p.losses,
+    'Win %':        p.games_played ? `${Math.round((p.wins / p.games_played) * 100)}%` : '0%',
+    'Best Game ($)': p.best_game,
+    'Worst Game ($)': p.worst_game,
+    'Total Buy-in ($)': p.total_buy_in,
+  }))
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(leaderboardRows), 'Leaderboard')
+
+  const summaryRows = [
+    { 'Metric': 'Total Games',  'Value': summary.total_games },
+    { 'Metric': 'Total Money in Play ($)', 'Value': summary.total_money },
+    { 'Metric': 'Average Pot ($)', 'Value': summary.avg_pot },
+    { 'Metric': 'Biggest Pot ($)', 'Value': summary.biggest_pot },
+    { 'Metric': 'Period', 'Value': periodLabel },
+  ]
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(summaryRows), 'Summary')
+
+  const slug = groupName ? groupName.replace(/\s+/g, '_') : 'group'
+  XLSX.writeFile(wb, `report_${slug}_${format(new Date(), 'yyyy-MM-dd')}.xlsx`)
+}
+
+function ReportsTab() {
+  const { activeGroup } = useGroup()
+  const groupId = activeGroup?.id
+  const [selectedPreset, setSelectedPreset] = useState(0)
+  const [customFrom, setCustomFrom] = useState('')
+  const [customTo, setCustomTo] = useState('')
+  const [loading, setLoading] = useState(false)
+  const [data, setData] = useState(null)
+
+  const preset = REPORT_PRESETS[selectedPreset]
+  const isCustom = preset.dateFrom === null
+  const dateFrom = isCustom ? customFrom : preset.dateFrom
+  const dateTo   = isCustom ? customTo   : preset.dateTo
+
+  const handleRun = async () => {
+    setLoading(true)
+    setData(null)
+    try {
+      const result = await getPlayerStats({
+        group_id: groupId,
+        dateFrom: dateFrom || undefined,
+        dateTo:   dateTo   || undefined,
+      })
+      setData(result)
+    } catch (e) {
+      toast.error(e.response?.data?.error || 'Failed to load report')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const periodLabel = isCustom
+    ? [customFrom, customTo].filter(Boolean).join(' to ') || 'Custom'
+    : preset.label
+
+  return (
+    <div className="px-4 pt-4 pb-6 space-y-4">
+      {/* Period selector */}
+      <section className="card space-y-3">
+        <h2 className="font-semibold text-slate-100 text-sm">Period</h2>
+        <div className="flex flex-wrap gap-2">
+          {REPORT_PRESETS.map((p, i) => (
+            <button key={i} onClick={() => setSelectedPreset(i)}
+              className={`px-3 py-1.5 rounded-xl text-sm font-medium border transition-colors ${
+                selectedPreset === i
+                  ? 'bg-emerald-600 text-white border-emerald-600'
+                  : 'bg-slate-700 text-slate-300 border-slate-600'
+              }`}>
+              {p.label}
+            </button>
+          ))}
+        </div>
+
+        {isCustom && (
+          <div className="grid grid-cols-2 gap-3 pt-1">
+            <div>
+              <label className="label">From</label>
+              <input type="date" className="input py-2" value={customFrom}
+                onChange={(e) => setCustomFrom(e.target.value)} />
+            </div>
+            <div>
+              <label className="label">To</label>
+              <input type="date" className="input py-2" value={customTo}
+                onChange={(e) => setCustomTo(e.target.value)} />
+            </div>
+          </div>
+        )}
+
+        <button className="btn-primary w-full py-3" onClick={handleRun} disabled={loading}>
+          {loading ? 'Loading…' : 'Run Report'}
+        </button>
+      </section>
+
+      {loading && <PageSpinner />}
+
+      {data && !loading && (
+        <>
+          {/* Summary cards */}
+          <div className="grid grid-cols-2 gap-3">
+            <div className="card py-3 text-center">
+              <p className="text-2xl font-bold text-slate-100">{data.summary.total_games}</p>
+              <p className="text-xs text-slate-500 mt-0.5">Games</p>
+            </div>
+            <div className="card py-3 text-center">
+              <p className="text-2xl font-bold text-slate-100">{data.players.length}</p>
+              <p className="text-xs text-slate-500 mt-0.5">Players</p>
+            </div>
+            <div className="card py-3 text-center">
+              <p className="text-2xl font-bold text-emerald-400">${data.summary.avg_pot.toFixed(0)}</p>
+              <p className="text-xs text-slate-500 mt-0.5">Avg Pot</p>
+            </div>
+            <div className="card py-3 text-center">
+              <p className="text-2xl font-bold text-emerald-400">${data.summary.biggest_pot.toFixed(0)}</p>
+              <p className="text-xs text-slate-500 mt-0.5">Biggest Pot</p>
+            </div>
+          </div>
+
+          {/* Leaderboard */}
+          {data.players.length === 0 ? (
+            <EmptyState icon="📊" title="No data" description="No finalized games in this period." />
+          ) : (
+            <section>
+              <div className="flex items-center justify-between mb-2">
+                <h2 className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Leaderboard</h2>
+                <button
+                  className="btn-secondary text-xs py-1.5 px-3 flex items-center gap-1.5"
+                  onClick={() => exportReports({ players: data.players, summary: data.summary, groupName: activeGroup?.name, periodLabel })}
+                >
+                  <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                      d="M12 10v6m0 0l-3-3m3 3l3-3M3 17V7a2 2 0 012-2h6l2 2h6a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2z" />
+                  </svg>
+                  Export
+                </button>
+              </div>
+              <div className="space-y-2">
+                {data.players.map((p, i) => {
+                  const winPct = p.games_played ? Math.round((p.wins / p.games_played) * 100) : 0
+                  const isUp   = p.net_total > 0
+                  const isDown = p.net_total < 0
+                  return (
+                    <div key={p.player_id} className="card py-0 overflow-hidden">
+                      <div className="flex items-center gap-3 px-4 py-3">
+                        {/* Rank badge */}
+                        <span className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold shrink-0 ${
+                          i === 0 ? 'bg-yellow-500/20 text-yellow-400' :
+                          i === 1 ? 'bg-slate-400/20 text-slate-300' :
+                          i === 2 ? 'bg-amber-700/20 text-amber-600' :
+                          'bg-slate-700 text-slate-500'
+                        }`}>
+                          {i + 1}
+                        </span>
+
+                        {/* Name + stats */}
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-semibold text-slate-100 truncate">{p.player_name}</p>
+                          <p className="text-xs text-slate-500 mt-0.5">
+                            {p.games_played}g · {p.wins}W {p.losses}L · {winPct}% win
+                          </p>
+                        </div>
+
+                        {/* Net result */}
+                        <div className="text-right shrink-0">
+                          <p className={`text-sm font-bold ${isUp ? 'text-emerald-400' : isDown ? 'text-red-400' : 'text-slate-400'}`}>
+                            {isUp ? '+' : ''}{p.net_total.toFixed(2)}
+                          </p>
+                          <p className="text-xs text-slate-600">
+                            best&nbsp;
+                            <span className="text-slate-500">${p.best_game.toFixed(0)}</span>
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+            </section>
+          )}
+        </>
+      )}
     </div>
   )
 }
