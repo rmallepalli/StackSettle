@@ -80,8 +80,13 @@ const markGamesSettled = async (gameIds) => {
   )
 }
 
-const listHistory = (groupId) =>
-  db.query(
+const parseGameIds = (r) => ({
+  ...r,
+  game_ids: typeof r.game_ids === 'string' ? JSON.parse(r.game_ids) : (r.game_ids || []),
+})
+
+const listHistory = async (groupId) => {
+  const { rows } = await db.query(
     `SELECT
        s.*,
        fp.name AS from_name, tp.name AS to_name,
@@ -95,5 +100,7 @@ const listHistory = (groupId) =>
      ORDER BY s.created_at DESC`,
     [groupId]
   )
+  return { rows: rows.map(parseGameIds) }
+}
 
 module.exports = { getUnsettledGames, createBatch, markGamesSettled, listHistory }
